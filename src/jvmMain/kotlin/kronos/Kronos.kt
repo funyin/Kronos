@@ -109,7 +109,7 @@ object Kronos {
 
     suspend fun dropAll(): Boolean {
         return kacheController.removeAll(collection) {
-            collection.deleteMany(Filters.empty()).wasAcknowledged()
+            collection.deleteMany(Filters.empty()).deletedCount>0
         }
     }
 

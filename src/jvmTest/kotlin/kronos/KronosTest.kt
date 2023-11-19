@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
@@ -159,6 +160,25 @@ class KronosTest {
             assert(Kronos.dropJob(jobType2.name))
             //jobType 2 dropped
             assert(Kronos.checkJob(job2Id) == null)
+        }
+
+        @Test
+        fun `drop all jobs`() = runTest {
+            registerSampleJob()
+            val jobs = listOf(
+                scheduleSampleJob(),
+                scheduleSampleJob(),
+                scheduleSampleJob(),
+                scheduleSampleJob(),
+            )
+            assertEquals(jobs.size, jobs.requireNoNulls().size)
+            val dropped = Kronos.dropAll()
+            dropped.toString()
+            for (job in jobs.requireNoNulls()){
+                val task = Kronos.checkJob(job)
+                println(task)
+                assert(task == null)
+            }
         }
     }
 
