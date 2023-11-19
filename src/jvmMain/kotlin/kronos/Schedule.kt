@@ -16,6 +16,7 @@ import kotlin.time.toDuration
  * It is advised to use a minimum of 1 minute, so you don't choke your resources
  * @param delay
  * @param endTime The job wil not be repeated if it is after this time
+ * @param maxCycles The job wil not be repeated after this number of cycles
  * @param retries The number of retries if the job execution fails.
  * Falls back to the [Job.retries] of the Job if not specified
  * @param params The data that will be made available to your job during execution. Note that
@@ -26,15 +27,16 @@ suspend fun Kronos.schedule(
     delay: Duration = Duration.ZERO,
     interval: Duration? = null,
     endTime: Long? = null,
+    maxCycles: Int? = null,
     retries: Int? = null,
     params: Map<String, String>,
 ): String? {
     return schedule(
         jobName = jobName,
-        startTime = Clock.System.now().plus(delay.inWholeMilliseconds, DateTimeUnit.MILLISECOND)
-            .toEpochMilliseconds(),
+        startTime = delayToStartTime(delay),
         interval = interval,
         endTime = endTime,
+        maxCycles = maxCycles,
         retries = retries,
         params = params
     )
@@ -47,6 +49,7 @@ suspend fun Kronos.schedule(
  * It is advised to use a minimum of 1 minute, so you don't choke your resources
  * @param startTime
  * @param endTime The job wil not be repeated if it is after this time
+ * @param maxCycles The job wil not be repeated after this number of cycles
  * @param retries The number of retries if the job execution fails.
  * Falls back to the [Job.retries] of the Job if not specified
  * @param params the data that will be made available to your job during execution
@@ -56,17 +59,19 @@ suspend fun Kronos.schedule(
     startTime: Long,
     interval: Duration? = null,
     endTime: Long? = null,
+    maxCycles: Int? = null,
     retries: Int? = null,
     params: Map<String, String>,
 ): String? {
 
-    val job = jobs[jobName] ?: throw IllegalStateException("Job with name has not been registered")
+    val job = getValidJob(jobName)
     val kronoJob = KronoJob(
         jobName = jobName,
         params = params,
         startTime = startTime,
         endTime = endTime,
-        retires = retries ?: job.retries,
+        maxCycles = maxCycles,
+        retries = retries ?: job.retries,
         interval = interval,
     )
     return addJob(kronoJob)
@@ -78,6 +83,7 @@ suspend fun Kronos.schedule(
  * @param delay This would influence the start time of the periodic task
  * @param periodic Specify tight constraints on the frequency and interval of execution. Take a look at [Periodic.Companion.everyDay]
  * @param endTime The job wil not be repeated if it is after this time
+ * @param maxCycles The job wil not be repeated after this number of cycles
  * @param retries The number of retries if the job execution fails.
  * Falls back to the [Job.retries] of the Job if not specified
  * @param params The data that will be made available to your job during execution. Note that
@@ -88,15 +94,16 @@ suspend fun Kronos.schedulePeriodic(
     delay: Duration = Duration.ZERO,
     periodic: Periodic,
     endTime: Long? = null,
+    maxCycles: Int? = null,
     retries: Int? = null,
     params: Map<String, String>,
 ): String? {
     return schedulePeriodic(
         jobName = jobName,
-        startTime = Clock.System.now().plus(delay.inWholeMilliseconds, DateTimeUnit.MILLISECOND)
-            .toEpochMilliseconds(),
+        startTime = delayToStartTime(delay),
         periodic = periodic,
         endTime = endTime,
+        maxCycles = maxCycles,
         retries = retries,
         params = params
     )
@@ -108,6 +115,7 @@ suspend fun Kronos.schedulePeriodic(
  * @param periodic Specify tight constraints on the frequency and interval of execution. Take a look at [Periodic.Companion.everyDay]
  * @param startTime
  * @param endTime The job wil not be repeated if it is after this time
+ * @param maxCycles The job wil not be repeated after this number of cycles
  * @param retries The number of retries if the job execution fails.
  * Falls back to the [Job.retries] of the Job if not specified
  * @param params The data that will be made available to your job during execution. Note that
@@ -118,21 +126,36 @@ suspend fun Kronos.schedulePeriodic(
     startTime: Long,
     periodic: Periodic,
     endTime: Long? = null,
+    maxCycles: Int? = null,
     retries: Int? = null,
     params: Map<String, String>,
 ): String? {
 
-    val job = jobs[jobName] ?: throw IllegalStateException("Job with name has not been registered")
+    val job = getValidJob(jobName)
     val kronoJob = KronoJob(
         jobName = jobName,
         params = params,
         startTime = nextPeriodicTime(startTime, periodic),
         endTime = endTime,
-        retires = retries ?: job.retries,
+        maxCycles = maxCycles,
+        retries = retries ?: job.retries,
         periodic = periodic,
     )
     return addJob(kronoJob)
 }
+
+private fun Kronos.getValidJob(jobName: String) =
+    jobs[jobName] ?: throw IllegalStateException("Job with name '$jobName' has not been registered")
+
+internal suspend fun Kronos.rescheduleJob(job: KronoJob): String? {
+    //validate that job is registered
+    getValidJob(jobName = job.jobName)
+    return addJob(job)
+}
+
+internal fun delayToStartTime(delay: Duration) =
+    Clock.System.now().plus(delay.inWholeMilliseconds, DateTimeUnit.MILLISECOND)
+        .toEpochMilliseconds()
 
 private fun nextPeriodicTime(startTime: Long, periodic: Periodic?): Long {
     return startTime.let {

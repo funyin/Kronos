@@ -3,49 +3,81 @@ package kronos
 import KacheController
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Projections
-import com.mongodb.client.model.Updates
 import com.mongodb.kotlin.client.coroutine.FindFlow
 import com.mongodb.kotlin.client.coroutine.MongoClient
-import com.sun.org.apache.xpath.internal.operations.Bool
 import io.lettuce.core.ExperimentalLettuceCoroutinesApi
 import io.lettuce.core.api.StatefulRedisConnection
 import io.lettuce.core.api.coroutines
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.count
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
-import kotlinx.datetime.*
 import kotlinx.serialization.Serializable
-import kronos.Kronos.coroutineScope
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
 
 @Serializable
 object Kronos {
     internal val jobs: MutableMap<String, Job> = mutableMapOf()
-    private lateinit var mongoClient: MongoClient
-    internal val collection by lazy { mongoClient.getDatabase("jobsDb").getCollection<KronoJob>("jobs") }
+    internal lateinit var mongoClient: MongoClient
+
+    internal val collection by lazy { mongoClient.getDatabase(jobsDbName).getCollection<KronoJob>("jobs") }
     internal lateinit var coroutineScope: CoroutineScope
-    private lateinit var redisConnection: StatefulRedisConnection<String, String>
+
+    internal lateinit var redisConnection: StatefulRedisConnection<String, String>
+    lateinit var jobsDbName: String
+
+    internal val mongoClientInitialized
+        get() = ::mongoClient.isInitialized
+    internal val coroutineScopeInitialized
+        get() = ::coroutineScope.isInitialized
+    internal val redisConnectionInitialized
+        get() = ::redisConnection.isInitialized
 
     @OptIn(ExperimentalLettuceCoroutinesApi::class)
-    internal val kacheController by lazy {
-        KacheController(
-            cacheEnabled = { true },
-            client = redisConnection.coroutines()
-        )
-    }
+    internal val kacheController: KacheController
+        get() = KacheController(cacheEnabled = { true }, client = redisConnection.coroutines())
 
-    fun init(mongoClient: MongoClient, redisConnection: StatefulRedisConnection<String, String>) {
+
+    fun init(
+        mongoClient: MongoClient,
+        redisConnection: StatefulRedisConnection<String, String>,
+        dispatcher: CoroutineDispatcher = Dispatchers.IO,
+        jobsDbName: String = "jobsDb",
+    ) {
         if (this::coroutineScope.isInitialized)
             throw IllegalStateException("Kronos already initialized")
-        Kronos.mongoClient = mongoClient
-        Kronos.redisConnection = redisConnection
-        coroutineScope = CoroutineScope(Dispatchers.IO)
+        this.jobsDbName = jobsDbName
+        this.mongoClient = mongoClient
+        this.redisConnection = redisConnection
+        coroutineScope = CoroutineScope(dispatcher)
+
         coroutineScope.launch {
             runner()
         }
     }
 
+    internal fun shutDown() {
+        val unsetField: (String) -> Unit = {
+            javaClass.getDeclaredField(it).apply {
+                isAccessible = false
+                set(this@Kronos, null)
+            }
+        }
+
+        redisConnection.close()
+        coroutineScope.cancel()
+        unsetField(::coroutineScope.name)
+        unsetField(::redisConnection.name)
+        unsetField(::mongoClient.name)
+        jobs.clear()
+    }
+
     fun register(job: Job) {
-        if (jobs.containsKey(job.name)) throw IllegalStateException("Job with name: ${job.name}")
+        if (jobs.containsKey(job.name)) throw IllegalStateException("Job with name: '${job.name}' already registered")
         jobs[job.name] = job
     }
 
@@ -67,6 +99,7 @@ object Kronos {
         }
         val jobs = find().projection(Projections.include("_id")).toList()
 //        collection.deleteMany(Filters.eq(KronoJob::jobName.name, name))
+        //Doing this instead of dropping the documents so that the cache can be cleared as well
         for (item in jobs) {
             val jobId: String = item["_id"].toString()
             dropJobId(jobId)
@@ -74,13 +107,29 @@ object Kronos {
         return find().count() == 0
     }
 
+    suspend fun dropAll(): Boolean {
+        return kacheController.removeAll(collection) {
+            collection.deleteMany(Filters.empty()).wasAcknowledged()
+        }
+    }
+
     internal suspend fun addJob(kronoJob: KronoJob): String? {
-        return coroutineScope.async {
-            kacheController.set(collection, serializer = KronoJob.serializer()) {
-                if (insertOne(kronoJob).wasAcknowledged())
-                    kronoJob
-                else null
-            }
-        }.await()?.id
+        return kacheController.set(collection, serializer = KronoJob.serializer()) {
+            if (insertOne(kronoJob).wasAcknowledged())
+                kronoJob
+            else null
+        }?.id
+    }
+
+    /**
+     * Get The data about a job,
+     * @return A json string of the job
+     */
+    suspend fun checkJob(jobId: String): String? {
+        return kacheController.get(id = jobId, collection, serializer = KronoJob.serializer()) {
+            find(Filters.eq("_id", jobId)).firstOrNull()
+        }?.let {
+            Json.encodeToString(it)
+        }
     }
 }

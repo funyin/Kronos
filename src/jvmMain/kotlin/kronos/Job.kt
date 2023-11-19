@@ -69,4 +69,23 @@ interface Job {
         println("time-> ${LocalDateTime.now()}")
         println()
     }
+
+    /**
+     * Add your own validation that must return true for the job to run
+     */
+    fun challenge(cycleNumber: Int, params: Map<String, Any>): Boolean = true
+
+    /**
+     * Another job has been loaded for a particular schedule. at this point your original job
+     * might still be in execution but the nex job has already been scheduled eagerly.
+     * This will only happen for periodic jobs or jobs with intervals
+     */
+    fun periodicJobLoaded(originJobId: String, nextJobId: String) {}
+
+    /**
+     * A Job has executed and has been dropped from the db
+     * This will only happen when Kronos drops the job, you will not get this
+     * callback for [Kronos.dropJobId] or [Kronos.dropJob] because those are only triggerred by you
+     */
+    fun onDrop(jobId: String, lastJob: Boolean) {}
 }

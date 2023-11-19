@@ -4,6 +4,8 @@ import com.mongodb.kotlin.client.coroutine.MongoClient
 import io.lettuce.core.RedisClient
 import kotlinx.coroutines.delay
 import kronos.*
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 suspend fun main() {
     val mongoClient = MongoClient.create("mongodb://localhost:27016")
@@ -29,10 +31,15 @@ suspend fun main() {
             "lastName" to "Kash"
         ),
     )
-    delay(1000 * 60)
-    val droppedId = Kronos.dropJobId(jobId!!)
-    delay(1000 * 60)
-    val droppedJob = Kronos.dropJob(SayHello.name)
+//    delay(1000 * 40)
+//    jobId?.let {
+//        Kronos.checkJob(it)?.let {
+//            println(it)
+//        }
+//    }
+//    val droppedId = Kronos.dropJobId(jobId!!)
+//    delay(1000 * 60)
+//    val droppedJob = Kronos.dropJob(SayHello.name)
     delay(1000 * 60 * 7)
 }
 

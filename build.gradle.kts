@@ -14,7 +14,7 @@ repositories {
 
 kotlin {
     jvm {
-        jvmToolchain(8)
+        jvmToolchain(17)
         withJava()
         testRuns.named("test") {
             executionTask.configure {
@@ -45,12 +45,12 @@ kotlin {
 
     
     sourceSets {
-//        val commonMain by getting
-//        val commonTest by getting {
-//            dependencies {
-//                implementation(kotlin("test"))
-//            }
-//        }
+        val commonMain by getting
+        val commonTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
+            }
+        }
         val jvmMain by getting{
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
@@ -61,7 +61,13 @@ kotlin {
                 implementation("io.lettuce:lettuce-core:6.3.0.RELEASE")
             }
         }
-        val jvmTest by getting
+        val jvmTest by getting{
+            dependencies{
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+                implementation(kotlin("test"))
+                implementation("io.mockk:mockk:1.13.8")
+            }
+        }
 //        val jsMain by getting
 //        val jsTest by getting
 //        val nativeMain by getting

@@ -16,91 +16,108 @@ internal suspend fun Kronos.runner() {
         println()
         val currentInstant = Clock.System.now()
 
-        val response =
-            kacheController.getAll(collection = collection, serializer = KronoJob.serializer()) {
-                find(Filters.empty()).toList()
-            }
+        val response = kacheController.getAll(collection = collection, serializer = KronoJob.serializer()) {
+            find(Filters.empty()).toList()
+        }
 
-        for (job in response) {
-
-            val dropJob: suspend () -> Unit = {
-                kacheController.remove(job.id, collection = collection) {
-                    deleteOne(Filters.eq("_id", job.id)).wasAcknowledged()
-                }
-            }
-
-            if (validate(job, currentInstant) && job.locks == 0) {
-                kacheController.set(collection, KronoJob.serializer()) {
-                    findOneAndUpdate(Filters.eq("_id", job.id), Updates.inc(KronoJob::locks.name, 1))
-                }
-                val task = jobs[job.jobName]
-                task?.let {
-                    val jobParams = job.params.toMutableMap()
-                    val cycleNumber = jobParams["cycleNumber"]?.toInt() ?: 1
-                    jobParams["cycleNumber"] = cycleNumber.toString()
-
-                    if (job.interval != null || job.periodic != null) {
-                        val reschedule: suspend () -> Unit = {
-
-                            val params = jobParams.toMutableMap()
-                            params["cycleNumber"] = (cycleNumber + 1).toString()
-
-                            if (job.interval != null) {
-                                schedule(
-                                    jobName = job.jobName,
-                                    interval = job.interval,
-                                    endTime = job.endTime,
-                                    params = params,
-                                    retries = job.retires
-                                )
-                            }
-
-                            if (job.periodic != null) {
-                                schedulePeriodic(
-                                    jobName = job.jobName,
-                                    delay = Duration.ZERO,
-                                    periodic = job.periodic,
-                                    endTime = job.endTime,
-                                    params = params,
-                                    retries = job.retires
-                                )
-                            }
-                        }
-
-                        //Reschedule
-                        if (job.endTime != null) {
-                            if (currentInstant < Instant.fromEpochMilliseconds(job.endTime))
-                                reschedule()
-                            dropJob()
-                        } else
-                            reschedule()
-                    }
-                    coroutineScope.launch {
-                        val execute: suspend () -> Boolean = {
-                            it.execute(cycleNumber, jobParams)
-                        }
-
-                        var success = execute()
-                        var retries = job.retires
-                        if (!success) {
-                            it.onFail(cycleNumber = cycleNumber, jobParams)
-                            while (!success && retries > 0) {
-                                success = execute()
-                                if (!success)
-                                    it.onRetryFail(
-                                        retryCount = (job.retires - retries),
-                                        cycleNumber = cycleNumber,
-                                        params = jobParams
-                                    )
-                                retries--
-                            }
-                        } else
-                            it.onSuccess(cycleNumber = cycleNumber, jobParams)
-                        dropJob()
-                    }
-                } ?: IllegalStateException("Job with name ${job.jobName} not registered")
+        for (kronoJob in response) {
+            coroutineScope.launch {
+                runJob(kronoJob, currentInstant)
             }
         }
+
+    }
+}
+
+private suspend fun Kronos.runJob(kronoJob: KronoJob, currentInstant: Instant) {
+    val dropJob: suspend () -> Boolean = {
+        kacheController.remove(kronoJob.id, collection = collection) {
+            deleteOne(Filters.eq("_id", kronoJob.id)).wasAcknowledged()
+        }
+    }
+
+    if (validate(kronoJob, currentInstant) && kronoJob.locks == 0) {
+        val task = jobs[kronoJob.jobName]
+        task?.let { job ->
+
+            val jobParams = kronoJob.params.toMutableMap()
+            val cycleNumber = jobParams["cycleNumber"]?.toInt() ?: 1
+            jobParams["cycleNumber"] = cycleNumber.toString()
+
+            if (!job.challenge(cycleNumber, jobParams))
+                return@let
+
+            kacheController.set(collection, KronoJob.serializer()) {
+                findOneAndUpdate(Filters.eq("_id", kronoJob.id), Updates.inc(KronoJob::locks.name, 1))
+            }
+
+            if (kronoJob.interval != null || kronoJob.periodic != null) {
+                val reschedule: suspend () -> Unit = {
+
+                    val params = jobParams.toMutableMap()
+                    params["cycleNumber"] = (cycleNumber + 1).toString()
+                    val delay = kronoJob.interval ?: Duration.ZERO
+                    KronoJob(
+                        jobName = kronoJob.jobName,
+                        //This is what sets the start time for the next job
+                        startTime = delayToStartTime(delay = delay),
+                        interval = kronoJob.interval,
+                        endTime = kronoJob.endTime,
+                        params = params,
+                        periodic = kronoJob.periodic,
+                        retries = kronoJob.retries,
+                        maxCycles = kronoJob.maxCycles,
+                        originCreatedAt = kronoJob.originCreatedAt,
+                        overshotAction = kronoJob.overshotAction,
+                    ).also {
+                        rescheduleJob(it)?.also { jobId ->
+                            job.periodicJobLoaded(kronoJob.id, jobId)
+                        }
+                    }
+                }
+
+                //Reschedule
+                if (kronoJob.endTime != null || kronoJob.maxCycles != null) {
+                    val underEndTime =
+                        kronoJob.endTime?.let {
+                            currentInstant < Instant.fromEpochMilliseconds(it)
+                        } ?: true
+                    val underMaxCycles = kronoJob.maxCycles?.let {
+                        cycleNumber < it
+                    } ?: true
+                    if (underEndTime || underMaxCycles)
+                        reschedule()
+                    else
+                        dropJob().takeIf { it }.also {
+                            job.onDrop(kronoJob.id, lastJob = true)
+                        }
+                } else
+                    reschedule()
+            }
+            coroutineScope.launch {
+                val execute: suspend () -> Boolean = {
+                    job.execute(cycleNumber, jobParams)
+                }
+
+                var success = execute()
+                var retries = kronoJob.retries
+                if (!success) {
+                    job.onFail(cycleNumber = cycleNumber, jobParams)
+                    while (!success && retries > 0) {
+                        success = execute()
+                        if (!success)
+                            job.onRetryFail(
+                                retryCount = (kronoJob.retries - retries),
+                                cycleNumber = cycleNumber,
+                                params = jobParams
+                            )
+                        retries--
+                    }
+                } else
+                    job.onSuccess(cycleNumber = cycleNumber, jobParams)
+                dropJob()
+            }
+        } ?: IllegalStateException("Job with name '${kronoJob.jobName}' is not registered")
     }
 }
 

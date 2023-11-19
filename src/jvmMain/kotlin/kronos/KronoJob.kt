@@ -1,8 +1,7 @@
 package kronos
 
 import Model
-import kotlinx.datetime.DayOfWeek
-import kotlinx.datetime.Month
+import kotlinx.datetime.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bson.types.ObjectId
@@ -22,8 +21,15 @@ data class KronoJob(
     val endTime: Long? = null,
     val interval: Duration? = null,
     val periodic: Periodic? = null,
-    val retires: Int = 0,
+    val maxCycles: Int? = null,
+    val retries: Int = 0,
     val createdAt: Long = Instant.now().toEpochMilli(),
+    /**
+     * The creationDate of the original Job.
+     * Decided to use LocalDateTime just so it is readable for debugging
+     * since no action would be performed on this
+     */
+    val originCreatedAt: LocalDateTime = Clock.System.now().toLocalDateTime(TimeZone.UTC),
     /**
      * Active processes executing a job on this job
      */
@@ -36,7 +42,7 @@ enum class OvershotAction {
 }
 
 @Serializable
-class Periodic private constructor(){
+class Periodic private constructor() {
     var dayOfWeek: DayOfWeek? = null
     var hour: Int? = null
     var minute: Int? = null

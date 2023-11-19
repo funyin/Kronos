@@ -13,7 +13,7 @@ repositories {
 dependencies {
 //    implementation("com.funyinkash:Kronos:1.0-SNAPSHOT")
     implementation(project(":kronos"))
-//    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:5.9.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation("com.google.guava:guava:31.1-jre")
@@ -34,7 +34,7 @@ application {
     mainClass.set("example.AppKt")
 }
 
-tasks.named<Test>("test") {
-    // Use JUnit Platform for unit tests.
-    useJUnitPlatform()
-}
+//tasks.named<Test>("test") {
+//    // Use JUnit Platform for unit tests.
+//    useJUnitPlatform()
+//}
