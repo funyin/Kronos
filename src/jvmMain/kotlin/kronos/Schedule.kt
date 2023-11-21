@@ -144,7 +144,7 @@ suspend fun Kronos.schedulePeriodic(
     return addJob(kronoJob)
 }
 
-private fun Kronos.getValidJob(jobName: String) =
+internal fun Kronos.getValidJob(jobName: String) =
     jobs[jobName] ?: throw IllegalStateException("Job with name '$jobName' has not been registered")
 
 internal suspend fun Kronos.rescheduleJob(job: KronoJob): String? {
@@ -154,10 +154,9 @@ internal suspend fun Kronos.rescheduleJob(job: KronoJob): String? {
 }
 
 internal fun delayToStartTime(delay: Duration) =
-    Clock.System.now().plus(delay.inWholeMilliseconds, DateTimeUnit.MILLISECOND)
-        .toEpochMilliseconds()
+    Clock.System.now().plus(delay).toEpochMilliseconds()
 
-private fun nextPeriodicTime(startTime: Long, periodic: Periodic?): Long {
+internal fun nextPeriodicTime(startTime: Long, periodic: Periodic?): Long {
     return startTime.let {
         when (periodic?.every) {
             Periodic.Every.minute -> {

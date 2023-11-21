@@ -15,9 +15,6 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.encodeToJsonElement
-import kotlinx.serialization.json.jsonObject
 
 @Serializable
 object Kronos {
@@ -38,9 +35,12 @@ object Kronos {
         get() = ::redisConnection.isInitialized
 
     @OptIn(ExperimentalLettuceCoroutinesApi::class)
-    internal val kacheController: KacheController
-        get() = KacheController(cacheEnabled = { true }, client = redisConnection.coroutines())
-
+    internal val kacheController: KacheController by lazy {
+        KacheController(
+            cacheEnabled = { true },
+            client = redisConnection.coroutines()
+        )
+    }
 
     fun init(
         mongoClient: MongoClient,
@@ -54,9 +54,12 @@ object Kronos {
         this.mongoClient = mongoClient
         this.redisConnection = redisConnection
         coroutineScope = CoroutineScope(dispatcher)
-
-        coroutineScope.launch {
-            runner()
+        //runner is not started for test dispatchers
+        //so I can control the curren time passed to the runner
+        if (dispatcher in listOf(Dispatchers.IO, Dispatchers.Main, Dispatchers.Unconfined, Dispatchers.Default)) {
+            coroutineScope.launch {
+                runner()
+            }
         }
     }
 
@@ -68,7 +71,6 @@ object Kronos {
             }
         }
 
-        redisConnection.close()
         coroutineScope.cancel()
         unsetField(::coroutineScope.name)
         unsetField(::redisConnection.name)
@@ -109,7 +111,7 @@ object Kronos {
 
     suspend fun dropAll(): Boolean {
         return kacheController.removeAll(collection) {
-            collection.deleteMany(Filters.empty()).deletedCount>0
+            collection.deleteMany(Filters.empty()).deletedCount > 0
         }
     }
 

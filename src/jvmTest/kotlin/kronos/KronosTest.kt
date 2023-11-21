@@ -12,6 +12,10 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
+import kronos.TestDataProvider.initKronos
+import kronos.TestDataProvider.registerSampleJob
+import kronos.TestDataProvider.sampleJob
+import kronos.TestDataProvider.scheduleSampleJob
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -26,17 +30,9 @@ import kotlin.time.toDuration
 class KronosTest {
 
 
-    val mongoClient: MongoClient = MongoClient.create("mongodb://localhost:27016")
-    val redisClient: RedisClient = RedisClient.create("redis://127.0.0.1:6379")
-    val sampleJob = object : Job {
-        override val name: String
-            get() = "sample-job"
-    }
-
-
     @BeforeEach
     fun beforeEach() = runTest {
-        initKronos()
+        initKronos(StandardTestDispatcher(testScheduler))
     }
 
     @AfterEach
@@ -45,15 +41,6 @@ class KronosTest {
         Kronos.shutDown()
     }
 
-    private fun TestScope.initKronos() {
-        val connection = redisClient.connect()
-        Kronos.init(
-            mongoClient = mongoClient,
-            redisConnection = connection,
-            dispatcher = StandardTestDispatcher(testScheduler),
-            jobsDbName = "testJobsDb"
-        )
-    }
 
     @Nested
     inner class Init {
@@ -65,17 +52,11 @@ class KronosTest {
             assert(Kronos.mongoClientInitialized)
         }
 
-//        @Test
-//        fun `assert Runner starts on Initialization`() = runTest {
-//            initKronos()
-//            assert(false)
-//        }
-
 
         @Test
         fun `multiple initialization throws error`() = runTest {
             val exception = assertThrows<IllegalStateException> {
-                initKronos()
+                initKronos(StandardTestDispatcher(testScheduler))
             }
             assertEquals(exception.message, "Kronos already initialized")
         }
@@ -98,39 +79,38 @@ class KronosTest {
             registerSampleJob()
             val exception = assertThrows<IllegalStateException> { registerSampleJob() }
             assertEquals(exception.message, "Job with name: '${sampleJob.name}' already registered")
-            assertEquals(Kronos.jobs, mutableMapOf<String, Job>(sampleJob.name to sampleJob))
+            assertEquals(Kronos.jobs, mutableMapOf<String,Job>(sampleJob.name to sampleJob))
         }
 
         @Test
         fun `check Job`() = runTest {
-            backgroundScope.launch {
-                registerSampleJob()
+            registerSampleJob()
 
-                assertEquals(Kronos.checkJob("0"), null)
-                val jobId = scheduleSampleJob()
-                Kronos.coroutineScope.cancel()
-                val job = Kronos.checkJob(jobId = jobId!!)?.let {
-                    Json.decodeFromString<KronoJob>(it)
-                }
-                assertEquals(job?.id, jobId)
+            assertEquals(Kronos.checkJob("0"), null)
+            val jobId = scheduleSampleJob()
+            Kronos.coroutineScope.cancel()
+            val job = Kronos.checkJob(jobId = jobId!!)?.let {
+                Json.decodeFromString<KronoJob>(it)
             }
+            assertEquals(job?.id, jobId)
         }
 
         @Test
         fun `drop Job`() = runTest {
             registerSampleJob()
-            backgroundScope.launch {
-                val job1Id = scheduleSampleJob()
-                val job2Id = scheduleSampleJob()
-                assert(job1Id != null)
-                assert(Kronos.dropJob(job1Id!!))
-                assert(Kronos.checkJob(job1Id!!) == null)
-                assert(job2Id != null)
-                assert(Kronos.checkJob(job2Id!!) != null)
+            val job1Id = scheduleSampleJob()
+            val job2Id = scheduleSampleJob()
+            assert(job1Id != null)
+            assert(Kronos.dropJobId(job1Id!!))
 
-                assert(Kronos.dropJob(job2Id!!))
-                assert(Kronos.checkJob(job2Id!!) != null)
-            }
+            assert(Kronos.checkJob(job1Id) == null)
+
+            assert(job2Id != null)
+            assert(Kronos.checkJob(job2Id!!) != null)
+
+
+            assert(Kronos.dropJobId(job2Id))
+            assert(Kronos.checkJob(job2Id) == null)
         }
 
         @Test
@@ -174,7 +154,7 @@ class KronosTest {
             assertEquals(jobs.size, jobs.requireNoNulls().size)
             val dropped = Kronos.dropAll()
             dropped.toString()
-            for (job in jobs.requireNoNulls()){
+            for (job in jobs.requireNoNulls()) {
                 val task = Kronos.checkJob(job)
                 println(task)
                 assert(task == null)
@@ -182,16 +162,6 @@ class KronosTest {
         }
     }
 
-    private fun registerSampleJob() {
-        Kronos.register(sampleJob)
-    }
-
-    private suspend fun scheduleSampleJob(): String? = Kronos.schedule(
-        sampleJob.name,
-        delay = 1.toDuration(DurationUnit.MINUTES),
-        interval = 1.toDuration(DurationUnit.MINUTES),
-        params = emptyMap()
-    )
 
     @Nested
     inner class Schedule {

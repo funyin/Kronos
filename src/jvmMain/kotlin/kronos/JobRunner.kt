@@ -2,30 +2,36 @@ package kronos
 
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Updates
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
 import kotlinx.datetime.*
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 internal suspend fun Kronos.runner() {
-    while (true) {
-        delay(1000 * 60)
+    while (coroutineScope.isActive) {
+        delay(1.minutes)
         println()
         println("Kronos Ping")
         println()
-        val currentInstant = Clock.System.now()
 
-        val response = kacheController.getAll(collection = collection, serializer = KronoJob.serializer()) {
-            find(Filters.empty()).toList()
+        handleJobs()
+    }
+}
+
+internal suspend fun Kronos.handleJobs(currentInstant: Instant = Clock.System.now()) {
+
+    val response = kacheController.getAll(collection = collection, serializer = KronoJob.serializer()) {
+        find(Filters.empty()).toList()
+    }
+
+
+    for (kronoJob in response) {
+        coroutineScope.launch {
+            runJob(kronoJob, currentInstant)
         }
-
-        for (kronoJob in response) {
-            coroutineScope.launch {
-                runJob(kronoJob, currentInstant)
-            }
-        }
-
     }
 }
 
@@ -44,7 +50,7 @@ private suspend fun Kronos.runJob(kronoJob: KronoJob, currentInstant: Instant) {
             val cycleNumber = jobParams["cycleNumber"]?.toInt() ?: 1
             jobParams["cycleNumber"] = cycleNumber.toString()
 
-            if (!job.challenge(cycleNumber, jobParams))
+            if (job.challengeRun(cycleNumber, jobParams))
                 return@let
 
             kacheController.set(collection, KronoJob.serializer()) {
@@ -60,7 +66,10 @@ private suspend fun Kronos.runJob(kronoJob: KronoJob, currentInstant: Instant) {
                     KronoJob(
                         jobName = kronoJob.jobName,
                         //This is what sets the start time for the next job
-                        startTime = delayToStartTime(delay = delay),
+                        startTime = if (kronoJob.periodic != null)
+                            nextPeriodicTime(currentInstant.toEpochMilliseconds(), kronoJob.periodic)
+                        else
+                            delayToStartTime(delay = delay),
                         interval = kronoJob.interval,
                         endTime = kronoJob.endTime,
                         params = params,
@@ -94,29 +103,28 @@ private suspend fun Kronos.runJob(kronoJob: KronoJob, currentInstant: Instant) {
                 } else
                     reschedule()
             }
-            coroutineScope.launch {
-                val execute: suspend () -> Boolean = {
-                    job.execute(cycleNumber, jobParams)
-                }
-
-                var success = execute()
-                var retries = kronoJob.retries
-                if (!success) {
-                    job.onFail(cycleNumber = cycleNumber, jobParams)
-                    while (!success && retries > 0) {
-                        success = execute()
-                        if (!success)
-                            job.onRetryFail(
-                                retryCount = (kronoJob.retries - retries),
-                                cycleNumber = cycleNumber,
-                                params = jobParams
-                            )
-                        retries--
-                    }
-                } else
-                    job.onSuccess(cycleNumber = cycleNumber, jobParams)
-                dropJob()
+            val execute: suspend () -> Boolean = {
+                job.execute(cycleNumber, jobParams)
             }
+
+            var success = execute()
+            var retries = kronoJob.retries
+            if (!success) {
+                job.onFail(cycleNumber = cycleNumber, jobParams)
+                while (!success && retries > 0) {
+                    success = execute()
+                    if (!success)
+                        job.onRetryFail(
+                            retryCount = (kronoJob.retries - retries),
+                            cycleNumber = cycleNumber,
+                            params = jobParams
+                        )
+                    retries--
+                }
+            } else
+                job.onSuccess(cycleNumber = cycleNumber, jobParams)
+            dropJob()
+
         } ?: IllegalStateException("Job with name '${kronoJob.jobName}' is not registered")
     }
 }
@@ -139,7 +147,12 @@ private fun validate(
         val matchHour = currentDateTime.time.minute == job.periodic.minute
         val matchDayOfWeek = currentDateTime.dayOfWeek == job.periodic.dayOfWeek
         val matchDayOfMonth = currentDateTime.dayOfMonth == job.periodic.dayOfMonth
-        val canStart = currentInstant.toEpochMilliseconds() >= job.startTime
+        //I am using whole minutes instead of milliseconds because there seems to be a millisecond
+        // glitch when running in test
+        val canStart =
+            (currentInstant.toEpochMilliseconds().toDuration(DurationUnit.MILLISECONDS) - job.startTime.toDuration(
+                DurationUnit.MILLISECONDS
+            )).inWholeMinutes >= 0
 
         canStart && when (job.periodic.every) {
             Periodic.Every.minute -> true
