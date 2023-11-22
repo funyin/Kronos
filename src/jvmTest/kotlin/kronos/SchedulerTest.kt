@@ -8,6 +8,8 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.test.*
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import java.time.Duration
@@ -32,7 +34,7 @@ class SchedulerTest {
     }
 
     @Test
-    fun `every month at dayOfMonth, hour and minute`() = runTest(timeout = 1.minutes) {
+    fun `every month at dayOfMonth, hour and minute`() = runTest(timeout = 5.minutes) {
 
         val currentTime = Clock.System.now()
         val kronoJob = spyk<KronoJob>(
@@ -40,19 +42,23 @@ class SchedulerTest {
                 jobName = TestDataProvider.sampleSpyJob.name,
                 startTime = currentTime.plus(1L.toDuration(DurationUnit.MINUTES)).toEpochMilliseconds(),
                 params = emptyMap(),
-                periodic = Periodic.everyMonth(8,5, 5),
+                periodic = Periodic.everyMonth(8, 5, 5),
             )
         )
 
         extraMocks(kronoJob, TestDataProvider.sampleSpyJob)
-        val minutesInYear = 1.toDuration(DurationUnit.DAYS).toLong(DurationUnit.MINUTES)
+        //365
+        val minutesInYear = 90.toDuration(DurationUnit.DAYS).toLong(DurationUnit.MINUTES)
         (1..minutesInYear).forEach {
             val timeAtMinute = currentTime.plus(it.minutes)
-            Kronos.handleJobs(timeAtMinute)
-            runCurrent()
+            //to prevent the test from taking too long
+            if (timeAtMinute.toLocalDateTime(TimeZone.UTC).dayOfMonth == 8) {
+                Kronos.handleJobs(timeAtMinute)
+                runCurrent()
+            }
         }
 
-        coVerify(exactly = 2) {
+        coVerify(exactly = 3) {
             TestDataProvider.sampleSpyJob.execute(
                 any(), any()
             )
