@@ -58,6 +58,8 @@ private fun validate(
 ): ValidationResult {
     val currentDateTime = currentInstant.toLocalDateTime(TimeZone.UTC)
 
+    //I am using whole minutes instead of milliseconds because there seems to be a millisecond
+    // glitch when running in test
     val startMinutesDiff =
         (currentInstant.toEpochMilliseconds() - job.startTime).toDuration(DurationUnit.MILLISECONDS).inWholeMinutes
     job.endTime?.let {
@@ -79,44 +81,33 @@ private fun validate(
             else -> false
         }
     } else {
-        val creationInstant = Instant.fromEpochMilliseconds(job.createdAt)
-        val creationDateTime = creationInstant.toLocalDateTime(TimeZone.UTC)
         val matchMinute = currentDateTime.time.minute == job.periodic.minute
         val matchHour = currentDateTime.time.hour == job.periodic.hour
         val matchDayOfWeek = currentDateTime.dayOfWeek == job.periodic.dayOfWeek
         val matchDayOfMonth = currentDateTime.dayOfMonth == job.periodic.dayOfMonth
-        //I am using whole minutes instead of milliseconds because there seems to be a millisecond
-        // glitch when running in test
+        val matchMonth = currentDateTime.month == job.periodic.month
 
 
         when (job.periodic.every) {
             Periodic.Every.minute -> true
             Periodic.Every.hour -> {
-                val newHour = creationInstant
-                    .periodUntil(currentInstant, TimeZone.UTC).hours >= 0
-                newHour && matchMinute
+                matchMinute
             }
 
             Periodic.Every.day -> {
-                val newDay = creationInstant
-                    .periodUntil(currentInstant, TimeZone.UTC).days >= 0
-                newDay && matchHour && matchMinute
+                matchHour && matchMinute
             }
 
             Periodic.Every.week -> {
-                val newWeek = creationInstant
-                    .periodUntil(currentInstant, TimeZone.UTC).days >= 7
-                newWeek && matchDayOfWeek && matchHour && matchMinute
+                matchDayOfWeek && matchHour && matchMinute
             }
 
             Periodic.Every.month -> {
-                val newMonth = creationDateTime.month != currentDateTime.month
-                newMonth && matchDayOfMonth && matchHour && matchMinute
+                matchDayOfMonth && matchHour && matchMinute
             }
 
             Periodic.Every.year -> {
-                val newYear = creationDateTime.year != currentDateTime.year
-                newYear && matchDayOfMonth && matchHour && matchMinute
+                matchMonth && matchDayOfMonth && matchHour && matchMinute
             }
         }
     }

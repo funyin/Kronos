@@ -4,17 +4,22 @@ import KacheController
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoCollection
 import io.mockk.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.test.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
-import java.time.Duration
-import kotlin.coroutines.Continuation
 import kotlin.coroutines.CoroutineContext
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -25,7 +30,6 @@ import kotlin.time.toDuration
 class SchedulerTest {
     @BeforeEach
     fun beforeEach() = runTest {
-//        clearAllMocks()
     }
 
     @AfterEach
@@ -34,7 +38,43 @@ class SchedulerTest {
     }
 
     @Test
-    fun `every month at dayOfMonth, hour and minute`() = runTest(timeout = 5.minutes) {
+    fun `every year  at month, dayOfMonth, hour and minute`() = runTest(timeout = 20.seconds) {
+
+        val currentTime = Clock.System.now()
+        val dayOfMonth = 8
+        val month = 5
+        val kronoJob = spyk<KronoJob>(
+            KronoJob(
+                jobName = TestDataProvider.sampleSpyJob.name,
+                startTime = currentTime.plus(1L.toDuration(DurationUnit.MINUTES)).toEpochMilliseconds(),
+                params = emptyMap(),
+                periodic = Periodic.everyYear(month, dayOfMonth, 5, 5),
+            )
+        )
+
+        extraMocks(kronoJob, TestDataProvider.sampleSpyJob)
+        //365
+        val minutesInYear = 365.toDuration(DurationUnit.DAYS).toLong(DurationUnit.MINUTES)
+        val threeYears = minutesInYear * 2
+        (1..threeYears).forEach {
+            val timeAtMinute = currentTime.plus(it.minutes)
+            val toLocalDateTime = timeAtMinute.toLocalDateTime(TimeZone.UTC)
+            //to prevent the test from taking too long
+            if (toLocalDateTime.dayOfMonth == dayOfMonth && toLocalDateTime.monthNumber == month) {
+                Kronos.handleJobs(timeAtMinute)
+                runCurrent()
+            }
+        }
+
+        coVerify(exactly = 2) {
+            TestDataProvider.sampleSpyJob.execute(
+                any(), any()
+            )
+        }
+    }
+
+    @Test
+    fun `every month at dayOfMonth, hour and minute`() = runTest(timeout = 20.seconds) {
 
         val currentTime = Clock.System.now()
         val kronoJob = spyk<KronoJob>(
@@ -59,6 +99,40 @@ class SchedulerTest {
         }
 
         coVerify(exactly = 3) {
+            TestDataProvider.sampleSpyJob.execute(
+                any(), any()
+            )
+        }
+    }
+
+    @Test
+    fun `every week at weekday, hour and minute`() = runTest(timeout = 20.seconds) {
+
+        val currentTime = Clock.System.now()
+        val dayOfWeek = 2
+        val hour = 5
+        val kronoJob = spyk<KronoJob>(
+            KronoJob(
+                jobName = TestDataProvider.sampleSpyJob.name,
+                startTime = currentTime.plus(1L.toDuration(DurationUnit.MINUTES)).toEpochMilliseconds(),
+                params = emptyMap(),
+                periodic = Periodic.everyWeek(dayOfWeek, hour, 5),
+            )
+        )
+
+        extraMocks(kronoJob, TestDataProvider.sampleSpyJob)
+        val minutesInWeek = 7.toDuration(DurationUnit.DAYS).toLong(DurationUnit.MINUTES)
+        (1..minutesInWeek).forEach {
+            val timeAtMinute = currentTime.plus(it.minutes)
+            val toLocalDateTime = timeAtMinute.toLocalDateTime(TimeZone.UTC)
+            //So that test does not run too long and getv ignored
+            if (toLocalDateTime.hour == hour) {
+                Kronos.handleJobs(timeAtMinute)
+                runCurrent()
+            }
+        }
+
+        coVerify(exactly = 1) {
             TestDataProvider.sampleSpyJob.execute(
                 any(), any()
             )
@@ -122,6 +196,35 @@ class SchedulerTest {
     }
 
     @Test
+    fun `handle every minute periodic job`() = runTest {
+
+        val kronoJob = spyk<KronoJob>(
+            KronoJob(
+                jobName = TestDataProvider.sampleSpyJob.name,
+                startTime = Clock.System.now().toEpochMilliseconds(),
+                params = emptyMap(),
+                periodic = Periodic.everyMinute()
+            )
+        )
+
+        extraMocks(kronoJob, TestDataProvider.sampleSpyJob)
+
+
+        Kronos.handleJobs(Instant.fromEpochMilliseconds(kronoJob.startTime).plus(1.minutes))
+        runCurrent()
+        Kronos.handleJobs(Instant.fromEpochMilliseconds(kronoJob.startTime).plus(1.minutes))
+        runCurrent()
+
+        coVerify(exactly = 2) {
+            TestDataProvider.sampleSpyJob.execute(
+                1, mapOf(
+                    "cycleNumber" to "1"
+                )
+            )
+        }
+    }
+
+    @Test
     fun `job and interval works`() = runTest {
 
         val currentTime = Clock.System.now()
@@ -158,7 +261,6 @@ class SchedulerTest {
 //            )
 //        }
     }
-
 
     @Test
     fun `job is run after endTime job 'OverShotAction_Fire'`() = runTest {
@@ -266,35 +368,6 @@ class SchedulerTest {
         runCurrent()
 
         coVerify(exactly = 1) {
-            TestDataProvider.sampleSpyJob.execute(
-                1, mapOf(
-                    "cycleNumber" to "1"
-                )
-            )
-        }
-    }
-
-    @Test
-    fun `handle every minute periodic job`() = runTest {
-
-        val kronoJob = spyk<KronoJob>(
-            KronoJob(
-                jobName = TestDataProvider.sampleSpyJob.name,
-                startTime = Clock.System.now().toEpochMilliseconds(),
-                params = emptyMap(),
-                periodic = Periodic.everyMinute()
-            )
-        )
-
-        extraMocks(kronoJob, TestDataProvider.sampleSpyJob)
-
-
-        Kronos.handleJobs(Instant.fromEpochMilliseconds(kronoJob.startTime).plus(1.minutes))
-        runCurrent()
-        Kronos.handleJobs(Instant.fromEpochMilliseconds(kronoJob.startTime).plus(1.minutes))
-        runCurrent()
-
-        coVerify(exactly = 2) {
             TestDataProvider.sampleSpyJob.execute(
                 1, mapOf(
                     "cycleNumber" to "1"
