@@ -88,6 +88,9 @@ interface Job {
      * A Job has executed and has been dropped from the db
      * This will only happen when Kronos drops the job, you will not get this
      * callback for [Kronos.dropJobId] or [Kronos.dropJob] because those are only triggerred by you
+     *
+     * **Note:** You will not be notified of jobs that are dropped as a result of beign overshot
+     * by having property [OvershotAction.Drop]
      */
     fun onDrop(jobId: String, lastJob: Boolean) {}
 }

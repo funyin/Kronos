@@ -2,6 +2,7 @@ package kronos
 
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import io.lettuce.core.RedisClient
+import io.mockk.spyk
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -37,4 +38,9 @@ object TestDataProvider {
             jobsDbName = "testJobsDb"
         )
     }
+
+    val sampleSpyJob = spyk<Job>(object : Job {
+        override val name: String
+            get() = "one-time-job"
+    })
 }

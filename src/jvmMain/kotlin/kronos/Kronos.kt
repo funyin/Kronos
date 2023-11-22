@@ -36,10 +36,7 @@ object Kronos {
 
     @OptIn(ExperimentalLettuceCoroutinesApi::class)
     internal val kacheController: KacheController by lazy {
-        KacheController(
-            cacheEnabled = { true },
-            client = redisConnection.coroutines()
-        )
+        KacheController(client = redisConnection.coroutines())
     }
 
     fun init(
