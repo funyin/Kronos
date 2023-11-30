@@ -1,0 +1,12 @@
+nav:
+    - index.md
+    - installation.md
+    - quick_start.md
+    - job
+    - schedule
+    - why_how.md
+    - examples
+    - Kdoc: https://lukasgeiter.com
+    - roadmap.md
+    - community
+    - ...

@@ -1,6 +1,6 @@
 package kronos
 
-import Model
+import com.funyinkash.kachecontroller.Model
 import kotlinx.datetime.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

@@ -40,3 +40,8 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+secret-key.ascii
+gradle.properties
+venv
+.cache
+.idea

@@ -1,11 +1,13 @@
-package example
+# Overview
 
-import com.mongodb.kotlin.client.coroutine.MongoClient
-import io.lettuce.core.RedisClient
-import kotlinx.coroutines.delay
-import kronos.*
-import java.time.Instant
+Welcome to Kronos. The persistent job scheduling library for kotlin multiplatform. 
 
+Inspired by [KJob](https://github.com/justwrote/kjob)
+
+
+### Summary
+
+```kotlin
 suspend fun main() {
     val mongoClient = MongoClient.create("mongodb://localhost:27017")
     val redisClient = RedisClient.create("redis://localhost:6379")
@@ -65,3 +67,4 @@ object SayHello : Job {
     }
 
 }
+```

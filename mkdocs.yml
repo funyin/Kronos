@@ -1,0 +1,61 @@
+# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
+
+site_name: Kronos
+#site_url: 'https://docs.example.com/'
+theme:
+  name: material
+  custom_dir: overrides
+  language: en
+  palette:
+    scheme: slate
+    primary: purple
+    accent: purple
+  features:
+    - navigation.prune
+    - navigation.indexes
+    - navigation.path
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.action.edit
+    - content.code.copy
+    - navigation.footer
+
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+
+plugins:
+  - search
+  - social
+  - git-revision-date-localized:
+      enable_creation_date: true
+      fallback_to_build_date: true
+  - git-committers:
+      repository: funyin/Kronos
+      branch: master
+  - awesome-pages
+
+
+extra:
+  social:
+    - icon: fontawesome/brands/github-alt
+      link: https://github.com/funyin/Kronos
+    - icon: fontawesome/brands/x-twitter
+      link: https://twitter.com/funyin_kash
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/funyinkash/
+#  analytics:
+#    provider: google
+#    property: G-XXXXXXXXXX
+#  version:
+#    provider: mike
+#    default: latest
+
+edit_uri: edit/master/docs/
+repo_url: https://github.com/funyin/Kronos
+copyright: Copyright &copy; 2023 <a href="https://github.com/funyin" target="Funyinoluwa Kashimawo" rel="noopener">Funyinoluwa Kashimawo</a>

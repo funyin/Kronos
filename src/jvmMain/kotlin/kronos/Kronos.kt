@@ -1,6 +1,6 @@
 package kronos
 
-import KacheController
+import com.funyinkash.kachecontroller.KacheController
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Projections
 import com.mongodb.kotlin.client.coroutine.FindFlow
@@ -39,6 +39,9 @@ object Kronos {
         KacheController(client = redisConnection.coroutines())
     }
 
+    /**
+     * @throws IllegalStateException on attempting to initialize a second time
+     */
     fun init(
         mongoClient: MongoClient,
         redisConnection: StatefulRedisConnection<String, String>,
