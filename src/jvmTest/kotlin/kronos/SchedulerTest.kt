@@ -1,6 +1,7 @@
 package kronos
 
-import KacheController
+
+import com.funyinkash.kachecontroller.KacheController
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoCollection
 import io.mockk.*
