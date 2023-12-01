@@ -20,14 +20,34 @@ jobs:
 #      - name: Install dependencies
 #        run: pip install requests
       - name: Set up JDK 18
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
-          java-version: '18'
-          distribution: 'adopt'
-      - name: Before Install
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Validate Gradle Wrapper
+        uses: gradle/wrapper-validation-action@v1
+
+      - name: Echo secrets
         run: |
-          chmod +x gradlew
-          chmod +x gradle/wrapper/gradle-wrapper.jar
+          echo $PROPERTIES_FILE >> src/gradle.properties
+          cat src/gradle.properties
+          echo GPG_SECRET_FILE >> src/secret.ascii
+          cat src/secret.ascii
+        shell: bash
+        env:
+            PROPERTIES_FILE: ${{secrets.PROPERTIES_FILE}}
+            GPG_SECRET_FILE: ${{secrets.GPG_SECRET_FILE}}
+
+      - name: Echo secrets
+        run: |
+          echo $PROPERTIES_FILE >> src/secret.ascii
+          cat src/your_directory_here/your_file_name.here
+        shell: bash
+        env:
+
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
       - name: Test and collect coverage
         run: |
           ./gradlew build
