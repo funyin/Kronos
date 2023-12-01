@@ -38,13 +38,6 @@ jobs:
             PROPERTIES_FILE: ${{secrets.PROPERTIES_FILE}}
             GPG_SECRET_FILE: ${{secrets.GPG_SECRET_FILE}}
 
-      - name: Echo secrets
-        run: |
-          echo $PROPERTIES_FILE >> src/secret.ascii
-          cat src/your_directory_here/your_file_name.here
-        shell: bash
-        env:
-
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
