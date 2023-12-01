@@ -27,10 +27,10 @@ jobs:
 
       - name: Echo secrets
         run: |
-          echo $PROPERTIES_FILE >> src/gradle.properties
-          cat src/gradle.properties
-          echo $GPG_SECRET_FILE >> src/secret.ascii
-          cat src/secret.ascii
+          echo $PROPERTIES_FILE >> gradle.properties
+          cat gradle.properties
+          echo $GPG_SECRET_FILE >> secret.ascii
+          cat secret.ascii
         shell: bash
         env:
             PROPERTIES_FILE: ${{secrets.PROPERTIES_FILE}}
