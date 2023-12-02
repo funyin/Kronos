@@ -88,7 +88,10 @@ object Kronos {
      */
     suspend fun dropJobId(id: String): Boolean {
         return kacheController.remove(id, collection = collection) {
-            deleteOne(Filters.eq("_id", id)).wasAcknowledged()
+            findOneAndDelete(Filters.eq("_id", id))?.let {
+                jobs[it.jobName]?.onDrop(id, lastJob = false)
+                true
+            } ?: false
         }
     }
 
@@ -99,19 +102,33 @@ object Kronos {
         val find: () -> FindFlow<Map<*, *>> = {
             collection.find(Filters.eq(KronoJob::jobName.name, name), resultClass = Map::class.java)
         }
-        val jobs = find().projection(Projections.include("_id")).toList()
+        val jobs = find().projection(Projections.include("_id", KronoJob::jobName.name)).toList()
 //        collection.deleteMany(Filters.eq(KronoJob::jobName.name, name))
         //Doing this instead of dropping the documents so that the cache can be cleared as well
-        for (item in jobs) {
+        jobs.forEachIndexed { index, item ->
             val jobId: String = item["_id"].toString()
-            dropJobId(jobId)
+            dropJobId(jobId).also {
+                if (it) {
+                    this.jobs[item[KronoJob::jobName.name].toString()]?.onDrop(jobId, index == jobs.lastIndex)
+                }
+            }
         }
         return find().count() == 0
     }
 
     suspend fun dropAll(): Boolean {
+        val allJobs = kacheController.getAll(collection, KronoJob.serializer()) {
+            collection.find(Filters.empty()).toList()
+        }
+
         return kacheController.removeAll(collection) {
             collection.deleteMany(Filters.empty()).deletedCount > 0
+        }.also {
+            if (it) {
+                allJobs.forEach { kronoJob ->
+                    jobs[kronoJob.jobName]?.onDrop(kronoJob.id, false)
+                }
+            }
         }
     }
 

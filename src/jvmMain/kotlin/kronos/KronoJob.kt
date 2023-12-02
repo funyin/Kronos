@@ -36,7 +36,10 @@ data class KronoJob(
      */
     val locks: Int = 0,
     val overshotAction: OvershotAction = OvershotAction.Drop,
-) : Model
+) : Model {
+    val repeatedJob: Boolean
+        get() = periodic != null || interval != null
+}
 
 /**
  * What do you want to happen when the job runner finds that the job start time is in the past.

@@ -26,9 +26,11 @@ internal suspend fun Kronos.handleJobs(currentInstant: Instant = Clock.System.no
     }
 
 
-    for (kronoJob in response) {
-        coroutineScope.launch {
-            handleJob(kronoJob, currentInstant)
+    coroutineScope {
+        for (kronoJob in response) {
+            launch {
+                handleJob(kronoJob, currentInstant)
+            }
         }
     }
 }
@@ -65,8 +67,7 @@ private fun validate(
     job.endTime?.let {
         val diff =
             (job.endTime - currentInstant.toEpochMilliseconds()).toDuration(DurationUnit.MILLISECONDS).inWholeMinutes
-        if (diff < 0)
-            return ValidationResult.overshot
+        if (diff < 0) return ValidationResult.overshot
     }
 
 
@@ -115,14 +116,10 @@ private fun validate(
 
 
 
-    return if (valid)
-        ValidationResult.valid
-    else
-        ValidationResult.scheduled
+    return if (valid) ValidationResult.valid
+    else ValidationResult.scheduled
 }
 
 private enum class ValidationResult {
-    valid,
-    overshot,
-    scheduled
+    valid, overshot, scheduled
 }

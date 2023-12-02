@@ -18,8 +18,8 @@ object TestDataProvider {
             get() = "sample-job"
     }
 
-    fun registerSampleJob() {
-        Kronos.register(sampleJob)
+    fun registerSampleJob(job: Job = sampleJob) {
+        Kronos.register(job)
     }
 
     suspend fun scheduleSampleJob(): String? = Kronos.schedule(
@@ -34,8 +34,7 @@ object TestDataProvider {
         mongoDBContainer.start()
         mongoConnectionString = mongoDBContainer.connectionString
 
-        val redisContainer =
-            RedisStackContainer(RedisStackContainer.DEFAULT_IMAGE_NAME.withTag(RedisStackContainer.DEFAULT_TAG))
+        val redisContainer = RedisContainer(RedisContainer.DEFAULT_IMAGE_NAME.withTag(RedisContainer.DEFAULT_TAG))
         redisContainer.start()
         redisConnectionString = redisContainer.redisURI
     }

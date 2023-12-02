@@ -96,7 +96,9 @@ internal suspend fun Kronos.runJob(
             }
         } else
             job.onSuccess(cycleNumber = cycleNumber, jobParams)
-        dropJob()
+        dropJob().takeIf { it }.also {
+            job.onDrop(kronoJob.id, lastJob = !kronoJob.repeatedJob)
+        }
 
     } ?: IllegalStateException("Job with name '${kronoJob.jobName}' is not registered")
 }

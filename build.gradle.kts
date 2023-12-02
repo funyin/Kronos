@@ -25,6 +25,7 @@ kotlin {
         testRuns.named("test") {
             executionTask.configure {
                 useJUnitPlatform()
+                setJvmArgs(listOf("-XX:-OmitStackTraceInFastThrow"))
             }
         }
     }
