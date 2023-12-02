@@ -42,12 +42,14 @@ jobs:
       - name: Test and collect coverage
         run: |
           ./gradlew build
-          ./gradlew koverHtmlReport
+          ./gradlew test
+          ./gradlew koverXmlReport
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4-beta
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          files: ./build/reports/kover/report.xml
 #      - name: Check coverage
 #        run: python request.py
 #        env:

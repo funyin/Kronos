@@ -87,6 +87,16 @@ kotlin {
     }
 }
 
+koverReport{
+    verify{
+        rule("Min Coverage"){
+            bound {
+                minValue = 85
+            }
+        }
+    }
+}
+
 
 
 publishing {
