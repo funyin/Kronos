@@ -8,7 +8,8 @@ plugins {
 }
 
 group = "com.funyinkash"
-version = "1.0-SNAPSHOT"
+//version = "0.0.1-SNAPSHOT"
+version = "0.0.2"
 
 repositories {
     mavenCentral()
@@ -19,6 +20,8 @@ repositories {
 }
 
 kotlin {
+
+//    withSourcesJar(publish = false)
     jvm {
         jvmToolchain(19)
         withJava()
@@ -88,9 +91,9 @@ kotlin {
     }
 }
 
-koverReport{
-    verify{
-        rule("Min Coverage"){
+koverReport {
+    verify {
+        rule("Min Coverage") {
             bound {
                 minValue = 85
             }
@@ -108,24 +111,25 @@ publishing {
         from("$buildDir/dokka/html")
     }
 
-//    val sourcesJar = tasks.register<Jar>("sourcesJar") {
-//        dependsOn(tasks.classes)
-//        archiveClassifier.set("sources")
-//        from(sourceSets.main)
-//    }
 
 
     publications {
-        create<MavenPublication>("maven") {
-//                artifactId = "mongo-redis"
+        withType<MavenPublication> {
+            val target = this.name
 
-            from(components["kotlin"])
-            artifact(javaDocJar)
+            if (target == "kotlinMultiplatform") {
+                artifactId = "kronos"
+            } else {
+                artifactId = "kronos-$target"
+                artifact(javaDocJar)
+//                from(components["java"])
+//                artifact(tasks.sourcesJar)
+            }
 
             pom {
                 name.set("Kronos")
                 description.set("Kronos is a persistent Job scheduling library.")
-                url.set("https://funyin.github.io/KacheController/mongo-redis/index.html")
+                url.set("https://funyin.github.io/Kronos/")
                 issueManagement {
                     system.set("Github")
                     url.set("https://github.com/funyin/Kronos/issues")
@@ -178,5 +182,8 @@ signing {
         file.readText(),
         project.properties["signing.password"].toString(),
     )
-    sign(publishing.publications["maven"])
+
+    publishing.publications.forEach {
+        sign(it)
+    }
 }

@@ -7,12 +7,15 @@ plugins {
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
-    mavenLocal()
+//    maven {
+//        url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+//    }
+//    mavenLocal()
 }
 
 dependencies {
-//    implementation("com.funyinkash:Kronos:1.0-SNAPSHOT")
-    implementation(project(":kronos"))
+    implementation("com.funyinkash:kronos:0.0.2")
+//    implementation(project(":kronos"))
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:5.9.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
