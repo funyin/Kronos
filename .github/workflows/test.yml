@@ -1,4 +1,4 @@
-name: Kotlin Test
+name: Test
 on:
   push:
     branches:

@@ -1,3 +1,6 @@
+[![Tests](https://github.com/funyin/Kronos/actions/workflows/test.yml/badge.svg)](https://github.com/funyin/Kronos/actions/workflows/test.yml) ![Codecov](https://img.shields.io/codecov/c/github/funyin/Kronos)
+
+
 # Overview
 
 Welcome to Kronos.\
