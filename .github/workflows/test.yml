@@ -1,4 +1,4 @@
-name: Github Actions Kotlin Standard
+name: Kotlin Test
 on:
   push:
     branches:
@@ -42,7 +42,8 @@ jobs:
       - name: Test and collect coverage
         run: |
           ./gradlew build
-          ./gradlew test
+          ./gradlew koverHtmlReport
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4-beta
         env:

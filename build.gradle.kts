@@ -4,6 +4,7 @@ plugins {
     id("org.jetbrains.dokka") version "1.9.10"
     `maven-publish`
     signing
+    id("org.jetbrains.kotlinx.kover") version "0.7.5"
 }
 
 group = "com.funyinkash"
