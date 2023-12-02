@@ -2,7 +2,6 @@ package kronos
 
 
 import com.funyinkash.kachecontroller.KacheController
-import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoCollection
 import io.mockk.*
 import kotlinx.coroutines.CoroutineScope
@@ -20,7 +19,6 @@ import kotlinx.datetime.toLocalDateTime
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import kotlin.coroutines.CoroutineContext
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -382,9 +380,9 @@ class SchedulerTest {
         every { Kronos.init(any(), any()) } returns Unit
         every { Kronos.coroutineScope.isActive } returns isActive
 
-        MongoClient.create("mongodb://localhost:27016")
-        val collection = TestDataProvider.mongoClient.getDatabase("mongodb").getCollection<KronoJob>("Hello")
-        every { Kronos.collection } returns spyk(collection)
+        val mockkDb = mockk<MongoCollection<KronoJob>>()
+        every { mockkDb.namespace.databaseName } returns  "mockk"
+        every { Kronos.collection } returns mockkDb
         val kacheController = mockk<KacheController> {
             coEvery { getAll<KronoJob>(any(), any(), any(), any()) } returns listOf(kronoJob)
             coEvery { set<KronoJob>(any(), any(), any()) } returns kronoJob

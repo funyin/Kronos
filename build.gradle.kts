@@ -19,7 +19,7 @@ repositories {
 
 kotlin {
     jvm {
-        jvmToolchain(17)
+        jvmToolchain(19)
         withJava()
         testRuns.named("test") {
             executionTask.configure {
@@ -70,6 +70,11 @@ kotlin {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
+
+                implementation(platform("org.testcontainers:testcontainers-bom:1.19.3"))
+                implementation("org.testcontainers:mongodb")
+                implementation("com.redis:testcontainers-redis:1.7.0")
+
                 implementation(kotlin("test"))
                 implementation("io.mockk:mockk:1.13.8")
             }

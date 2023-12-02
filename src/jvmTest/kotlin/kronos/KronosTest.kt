@@ -2,14 +2,12 @@
 
 package kronos
 
-import com.mongodb.kotlin.client.coroutine.MongoClient
-import io.lettuce.core.RedisClient
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kronos.TestDataProvider.initKronos
@@ -17,18 +15,25 @@ import kronos.TestDataProvider.registerSampleJob
 import kronos.TestDataProvider.sampleJob
 import kronos.TestDataProvider.scheduleSampleJob
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
 
 class KronosTest {
 
+    companion object{
+        @JvmStatic
+        @BeforeAll
+        fun beforeAll() {
+            TestDataProvider.startContainers()
+        }
+    }
 
     @BeforeEach
     fun beforeEach() = runTest {
@@ -39,6 +44,7 @@ class KronosTest {
     fun afterEach() = runTest {
         Kronos.dropAll()
         Kronos.shutDown()
+        clearAllMocks()
     }
 
 

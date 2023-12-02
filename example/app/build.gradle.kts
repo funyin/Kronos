@@ -34,7 +34,7 @@ application {
     mainClass.set("example.AppKt")
 }
 
-//tasks.named<Test>("test") {
-//    // Use JUnit Platform for unit tests.
-//    useJUnitPlatform()
-//}
+tasks.named<Test>("test") {
+    // Use JUnit Platform for unit tests.
+    useJUnitPlatform()
+}
