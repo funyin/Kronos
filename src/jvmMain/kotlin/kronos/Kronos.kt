@@ -6,6 +6,7 @@ import com.mongodb.client.model.Projections
 import com.mongodb.kotlin.client.coroutine.FindFlow
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import io.lettuce.core.ExperimentalLettuceCoroutinesApi
+import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulRedisConnection
 import io.lettuce.core.api.coroutines
 import kotlinx.coroutines.*
@@ -43,16 +44,18 @@ object Kronos {
      * @throws IllegalStateException on attempting to initialize a second time
      */
     fun init(
-        mongoClient: MongoClient,
-        redisConnection: StatefulRedisConnection<String, String>,
+        mongoConnectionString: String,
+        redisConnectionString: String,
         dispatcher: CoroutineDispatcher = Dispatchers.IO,
         jobsDbName: String = "jobsDb",
     ) {
         if (this::coroutineScope.isInitialized)
             throw IllegalStateException("Kronos already initialized")
+
+
         this.jobsDbName = jobsDbName
-        this.mongoClient = mongoClient
-        this.redisConnection = redisConnection
+        this.mongoClient = MongoClient.create(mongoConnectionString)
+        this.redisConnection = RedisClient.create(redisConnectionString).connect()
         coroutineScope = CoroutineScope(dispatcher)
         //runner is not started for test dispatchers
         //so I can control the curren time passed to the runner

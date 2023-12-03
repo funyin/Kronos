@@ -1,62 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://funyin.github.io/Kronos/0.0.2/</loc>
+         <loc>https://funyin.github.io/Kronos/0.0.3/</loc>
          <lastmod>2023-12-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://funyin.github.io/Kronos/0.0.2/installation/</loc>
+         <loc>https://funyin.github.io/Kronos/0.0.3/installation/</loc>
          <lastmod>2023-12-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://funyin.github.io/Kronos/0.0.2/quick_start/</loc>
+         <loc>https://funyin.github.io/Kronos/0.0.3/quick_start/</loc>
          <lastmod>2023-12-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://funyin.github.io/Kronos/0.0.2/roadmap/</loc>
+         <loc>https://funyin.github.io/Kronos/0.0.3/roadmap/</loc>
          <lastmod>2023-12-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://funyin.github.io/Kronos/0.0.2/why_how/</loc>
+         <loc>https://funyin.github.io/Kronos/0.0.3/why_how/</loc>
          <lastmod>2023-12-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://funyin.github.io/Kronos/0.0.2/community/</loc>
+         <loc>https://funyin.github.io/Kronos/0.0.3/community/</loc>
          <lastmod>2023-12-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://funyin.github.io/Kronos/0.0.2/community/contributing/</loc>
+         <loc>https://funyin.github.io/Kronos/0.0.3/community/contributing/</loc>
          <lastmod>2023-12-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://funyin.github.io/Kronos/0.0.2/examples/</loc>
+         <loc>https://funyin.github.io/Kronos/0.0.3/examples/</loc>
          <lastmod>2023-12-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://funyin.github.io/Kronos/0.0.2/job/</loc>
+         <loc>https://funyin.github.io/Kronos/0.0.3/job/</loc>
          <lastmod>2023-12-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://funyin.github.io/Kronos/0.0.2/job/runner/</loc>
+         <loc>https://funyin.github.io/Kronos/0.0.3/job/runner/</loc>
          <lastmod>2023-12-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://funyin.github.io/Kronos/0.0.2/schedule/</loc>
+         <loc>https://funyin.github.io/Kronos/0.0.3/schedule/</loc>
          <lastmod>2023-12-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://funyin.github.io/Kronos/0.0.2/schedule/periodic/</loc>
+         <loc>https://funyin.github.io/Kronos/0.0.3/schedule/periodic/</loc>
          <lastmod>2023-12-03</lastmod>
          <changefreq>daily</changefreq>
     </url>

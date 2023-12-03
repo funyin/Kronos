@@ -1,18 +1,17 @@
 package example
 
-import com.mongodb.kotlin.client.coroutine.MongoClient
-import io.lettuce.core.RedisClient
+
 import kotlinx.coroutines.delay
 import kronos.*
 import java.time.Instant
 
 suspend fun main() {
-    val mongoClient = MongoClient.create("mongodb://localhost:27017")
-    val redisClient = RedisClient.create("redis://localhost:6379")
-    val connection = redisClient.connect()
 
     //Initialize
-    Kronos.init(mongoClient = mongoClient, redisConnection = connection)
+    Kronos.init(
+        mongoConnectionString = "mongodb://localhost:27017",
+        redisConnectionString = "redis://localhost:6379"
+    )
     //Register a Job
     Kronos.register(SayHello)
     //Schedule a one time job
@@ -47,7 +46,6 @@ suspend fun main() {
     jobId?.let { Kronos.dropJob(SayHello.name) }
 
     Kronos.dropAll()
-
     delay(1000 * 60 * 7)
 }
 
