@@ -1,3 +1,7 @@
+---
+comments: true
+---
+
 # Roadmap
 Here is an unordered list of features that I would like to see in kjob. If you consider one of them important please open an issue.
 

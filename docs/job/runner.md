@@ -1,3 +1,7 @@
+---
+comments: true
+---
+
 The Runner is responsible for managing the validation and execution of jobs after they have been scheduled.
 
 There are a few edge cases that you can cater for by directing the runner on what to do in those cases

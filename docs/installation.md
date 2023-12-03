@@ -1,3 +1,7 @@
+---
+comments: true
+---
+
 # Installation
 
 Kronos is pushed to MavenCentral repository as kotlin multiplatform library.

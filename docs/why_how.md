@@ -1,5 +1,6 @@
 ---
 title: Why, How
+comments: true
 ---
 
 ### The Philosophy of Kronos

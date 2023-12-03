@@ -1,4 +1,9 @@
+---
+comments: true
+---
+
 # Contribute
+
 ## Welcome aboard!
 Forget commit access! You can be a Kronos demigod by squishing bugs, crafting docs, and slaying forum monsters.
 

@@ -1,3 +1,7 @@
+---
+comments: true
+---
+
 ## Starting Kronos
 
 Kronos should be initialized once through the lifecycle of your application.
