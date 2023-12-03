@@ -31,3 +31,4 @@ jobs:
           git config user.name ci-bot
           git config user.email ci-bot@example.com
           mike deploy --push --update-aliases 0.0.2 latest
+          mike set-default --push latest
