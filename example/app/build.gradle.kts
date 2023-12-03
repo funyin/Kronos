@@ -10,20 +10,17 @@ repositories {
 //    maven {
 //        url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
 //    }
-//    mavenLocal()
+    mavenLocal()
 }
 
 dependencies {
-    implementation("com.funyinkash:kronos:0.0.2")
+    implementation("com.funyinkash:kronos:0.0.3")
 //    implementation(project(":kronos"))
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:5.9.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation("com.google.guava:guava:31.1-jre")
-    implementation("org.mongodb:mongodb-driver-kotlin-coroutine:4.11.1")
-    implementation("io.lettuce:lettuce-core:6.3.0.RELEASE")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-    implementation("org.mongodb:bson-kotlinx:4.11.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.0")
 }
 
 java {

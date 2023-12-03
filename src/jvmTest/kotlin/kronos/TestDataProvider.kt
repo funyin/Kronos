@@ -2,7 +2,6 @@ package kronos
 
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.redis.testcontainers.RedisContainer
-import com.redis.testcontainers.RedisStackContainer
 import io.lettuce.core.RedisClient
 import io.mockk.spyk
 import kotlinx.coroutines.CoroutineDispatcher
@@ -43,13 +42,9 @@ object TestDataProvider {
     private lateinit var redisConnectionString: String
 
     fun initKronos(dispatcher: CoroutineDispatcher) {
-        val mongoClient = MongoClient.create(mongoConnectionString)
-
-        val redisClient = RedisClient.create(redisConnectionString)
-        val redisConnection = redisClient.connect()
         Kronos.init(
-            mongoClient = mongoClient,
-            redisConnection = redisConnection,
+            mongoConnectionString = mongoConnectionString,
+            redisConnectionString = redisConnectionString,
             dispatcher = dispatcher,
             jobsDbName = "testJobsDb"
         )
