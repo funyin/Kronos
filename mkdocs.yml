@@ -1,7 +1,8 @@
 # yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
 
 site_name: Kronos
-#site_url: 'https://docs.example.com/'
+site_url: 'https://funyin.github.io/Kronos/'
+#site_url: 'http://localhost:8000/'
 theme:
   name: material
   custom_dir: overrides
@@ -52,9 +53,9 @@ extra:
   analytics:
     provider: google
     property: G-CJB589SXLW
-#  version:
-#    provider: mike
-#    default: latest
+  version:
+    provider: mike
+    default: latest
 
 edit_uri: edit/master/docs/
 repo_url: https://github.com/funyin/Kronos
