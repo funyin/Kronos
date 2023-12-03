@@ -49,9 +49,9 @@ extra:
       link: https://twitter.com/funyin_kash
     - icon: fontawesome/brands/linkedin
       link: https://www.linkedin.com/in/funyinkash/
-#  analytics:
-#    provider: google
-#    property: G-XXXXXXXXXX
+  analytics:
+    provider: google
+    property: G-CJB589SXLW
 #  version:
 #    provider: mike
 #    default: latest
