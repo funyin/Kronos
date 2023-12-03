@@ -19,7 +19,7 @@ Kronos is pushed to MavenCentral repository as kotlin multiplatform library.
     Add dependencies:
     
     ```kotlin
-    implementation("com.funyinkash:kronos:0.0.2")
+    implementation("com.funyinkash:kronos:$latest")
     ```
 
 === "Gradle"
@@ -35,7 +35,7 @@ Kronos is pushed to MavenCentral repository as kotlin multiplatform library.
     Add dependencies (you can also add other modules that you need):
     
     ```groovy
-    implementation 'com.funyinkash:kronos:0.0.2'
+    implementation 'com.funyinkash:kronos:$latest'
     ```
 
 === "Maven" 
@@ -59,7 +59,7 @@ Kronos is pushed to MavenCentral repository as kotlin multiplatform library.
     <dependency>
         <groupId>com.funyinkash</groupId>
         <artifactId>kronos</artifactId>
-        <version>0.0.2</version>
+        <version>$latest</version>
     </dependency>
     ```
 
@@ -68,10 +68,7 @@ Specific dependencies. The Multiplatform dependency above should be sufficient, 
 
 === "jvm"
     ```kotlin
-    implementation("com.funyinkash:kronos-jvm:0.0.2")
-    //supporting libraries that are required to initialize kronos
-    implementation("org.mongodb:mongodb-driver-kotlin-coroutine:4.11.1")
-    implementation("io.lettuce:lettuce-core:6.3.0.RELEASE")
+    implementation("com.funyinkash:kronos-jvm:$latest")
     ```
     
 === "js"

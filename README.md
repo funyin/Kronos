@@ -12,12 +12,12 @@ The persistent job scheduling library for kotlin multiplatform.
 
 ```kotlin
 suspend fun main() {
-    val mongoClient = MongoClient.create("mongodb://localhost:27017")
-    val redisClient = RedisClient.create("redis://localhost:6379")
-    val connection = redisClient.connect()
 
     //Initialize
-    Kronos.init(mongoClient = mongoClient, redisConnection = connection)
+    Kronos.init(
+        mongoConnectionString = "mongodb://localhost:27017",
+        redisConnectionString = "redis://localhost:6379"
+    )
     //Register a Job
     Kronos.register(SayHello)
     //Schedule a one time job
