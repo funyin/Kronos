@@ -2,11 +2,6 @@
 
 Kronos is pushed to MavenCentral repository as kotlin multiplatform library.
 
-### Supported targets
-- jvm
-- <s>native</s>
-- <s>js</s>
-
 === "Kotlin Gradle Script" 
     
     Add Maven Central repository:
@@ -20,7 +15,7 @@ Kronos is pushed to MavenCentral repository as kotlin multiplatform library.
     Add dependencies:
     
     ```kotlin
-    implementation("com.funyinkash:kronos:1.0.0")
+    implementation("com.funyinkash:kronos:0.0.2")
     ```
 
 === "Gradle"
@@ -36,7 +31,7 @@ Kronos is pushed to MavenCentral repository as kotlin multiplatform library.
     Add dependencies (you can also add other modules that you need):
     
     ```groovy
-    implementation 'com.funyinkash:kronos:1.0.0'
+    implementation 'com.funyinkash:kronos:0.0.2'
     ```
 
 === "Maven" 
@@ -60,18 +55,17 @@ Kronos is pushed to MavenCentral repository as kotlin multiplatform library.
     <dependency>
         <groupId>com.funyinkash</groupId>
         <artifactId>kronos</artifactId>
-        <version>1.0.0</version>
+        <version>0.0.2</version>
     </dependency>
     ```
 
-## Platforms
+## Targets
+Specific dependencies. The Multiplatform dependency above should be sufficient, but these are also published 
 
 === "jvm"
-    
-    Kronos currently uses [mongodb](https://www.mongodb.com/docs/drivers/kotlin/coroutine/current/) as the database and [redis](https://lettuce.io/) as the cache.
-    So you'll need to install dependencies for those
-    
     ```kotlin
+    implementation("com.funyinkash:kronos-jvm:0.0.2")
+    //supporting libraries that are required to initialize kronos
     implementation("org.mongodb:mongodb-driver-kotlin-coroutine:4.11.1")
     implementation("io.lettuce:lettuce-core:6.3.0.RELEASE")
     ```

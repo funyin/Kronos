@@ -73,7 +73,7 @@ interface Job {
     /**
      * Add your own validation that must return false for the job to run
      * This is called after the job has passed Kronos validation
-     * If this returns [true] then the job will no run
+     * If this returns [true] then the job will not run
      */
     fun challengeRun(cycleNumber: Int, params: Map<String, Any>): Boolean = false
 

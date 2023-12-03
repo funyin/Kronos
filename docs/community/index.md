@@ -1,14 +1,12 @@
 # Community
-Quartz has been around for more than 15 years. As such, there is a large community of people helping each other make the most of Quartz. Please feel free to participate at whatever extent you wish!
+Kronos is nice, contribute and make yourself happy
 
 ## Community Resources
 Find and Give Help
-- Quartz Users’ Forum / Mail List  › (via Google Groups)
+
+- Kronos Forum (coming soon)
 
 ## Report Issues, Request Features, Get Code
-- Quartz issue tracker ›
-- Quartz source code repository ›
 
-## Participate in the Development of Quartz
-How to contribute ›
-Quartz developers’ Forum / Mail List  › (via Google Groups)
+- [Kronos issue tracker](https://github.com/funyin/Kronos/issues)
+- [Kronos source code repository](https://github.com/funyin/Kronos)

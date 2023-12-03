@@ -1,9 +1,6 @@
 # Overview
 
-Welcome to Kronos. The persistent job scheduling library for kotlin multiplatform. 
-
-Inspired by [KJob](https://github.com/justwrote/kjob)
-
+Welcome to Kronos. The persistent job scheduling library for kotlin multiplatform.
 
 ### Summary
 
