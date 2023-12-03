@@ -25,4 +25,9 @@ jobs:
           restore-keys: |
             mkdocs-material-
       - run: pip install -r requirements.txt
-      - run: mkdocs gh-deploy --force
+#      - run: mkdocs gh-deploy --force
+      - run: |
+          git fetch origin gh-pages --depth=1
+          git config user.name ci-bot
+          git config user.email ci-bot@example.com
+          mike deploy --push --update-aliases 0.0.2 latest
