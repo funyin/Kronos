@@ -1,12 +1,17 @@
 [![Tests](https://github.com/funyin/Kronos/actions/workflows/test.yml/badge.svg)](https://github.com/funyin/Kronos/actions/workflows/test.yml) ![Codecov](https://img.shields.io/codecov/c/github/funyin/Kronos)
 [![Netlify Status](https://api.netlify.com/api/v1/badges/e1f7938b-b7df-476c-a301-b3f60802b624/deploy-status)](https://app.netlify.com/sites/kronos-kdock/deploys)
 
-
 # Overview
 
 Welcome to Kronos.\
 The persistent job scheduling library for kotlin multiplatform.
+Published on maven central
 
+### Installation
+
+```kts
+implementation("com.funyinkash:kronos:0.0.3")
+```
 
 ### Summary
 
@@ -73,4 +78,5 @@ object SayHello : Job {
 ```
 
 ### Licence
+
 Kronos is Licenced by [Apache 2.0 Licence](LICENSE.txt)
