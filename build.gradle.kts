@@ -8,8 +8,8 @@ plugins {
 }
 
 group = "com.funyinkash"
-//version = "0.0.1-SNAPSHOT"
-version = "0.0.3"
+version = "0.0.4-SNAPSHOT"
+//version = "0.0.4"
 
 repositories {
     mavenCentral()

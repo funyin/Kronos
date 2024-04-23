@@ -67,7 +67,7 @@ internal suspend fun Kronos.runJob(
                 val underMaxCycles = kronoJob.maxCycles?.let {
                     cycleNumber < it
                 } ?: true
-                if (underEndTime || underMaxCycles)
+                if (underEndTime && underMaxCycles)
                     reschedule()
                 else
                     dropJob().takeIf { it }.also {
