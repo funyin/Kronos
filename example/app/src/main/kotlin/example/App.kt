@@ -4,6 +4,7 @@ package example
 import kotlinx.coroutines.delay
 import kronos.*
 import java.time.Instant
+import kotlin.time.Duration.Companion.minutes
 
 suspend fun main() {
 
@@ -16,8 +17,8 @@ suspend fun main() {
     Kronos.register(SayHello)
     //Schedule a one time job
     Kronos.schedule(
-        SayHello.name,/*say-hello*/
-        startTime = Instant.now().plusSeconds(60).toEpochMilli(),
+        jobName = SayHello.name,/*say-hello*/
+//        startTime = Instant.now().plusSeconds(60).toEpochMilli(),
         params = mapOf(
             "firsName" to "Funyin",
             "lastName" to "Kash"
@@ -40,11 +41,11 @@ suspend fun main() {
         ),
     )
 
+    delay(2.minutes)
     //Drop Job By Id
     jobId?.let { Kronos.dropJobId(it) }
     //Drop Job By Name
     jobId?.let { Kronos.dropJob(SayHello.name) }
-
     Kronos.dropAll()
     delay(1000 * 60 * 7)
 }

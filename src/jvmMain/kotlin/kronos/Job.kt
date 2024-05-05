@@ -1,5 +1,6 @@
 package kronos
 
+import java.lang.Exception
 import java.time.LocalDateTime
 
 /**
@@ -37,7 +38,7 @@ interface Job {
      * That is because the firs call back [retryCount] will be 0 because the number of retries is 0
      * @param cycleNumber this would be greater than 1 for a repeated job [Job.retries]
      */
-    fun onRetryFail(retryCount: Int, cycleNumber: Int, params: Map<String, Any>) {
+    fun onRetryFail(retryCount: Int, cycleNumber: Int, params: Map<String, Any>, exception: Exception?) {
         println("KRONOJOB($name) RetryFail: ")
         println("retries-> $retryCount")
         println("cycle-> $cycleNumber")
@@ -50,7 +51,7 @@ interface Job {
      * call back for failure after retries
      * @param cycleNumber this would be greater than 1 for a repeated job [Job.retries]
      */
-    fun onFail(cycleNumber: Int, params: Map<String, Any>) {
+    fun onFail(cycleNumber: Int, params: Map<String, Any>, exception: Exception?) {
         println("KRONOJOB($name) Fail: ")
         println("cycle-> $cycleNumber")
         println("params-> $params")

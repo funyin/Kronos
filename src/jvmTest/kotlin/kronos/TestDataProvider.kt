@@ -7,6 +7,7 @@ import io.mockk.spyk
 import kotlinx.coroutines.CoroutineDispatcher
 import org.testcontainers.containers.MongoDBContainer
 import org.testcontainers.utility.DockerImageName
+import java.lang.Exception
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
@@ -15,6 +16,10 @@ object TestDataProvider {
     val sampleJob = object : Job {
         override val name: String
             get() = "sample-job"
+
+//        override fun onFail(cycleNumber: Int, params: Map<String, Any>, exception: Exception?) {
+//            super.onFail(cycleNumber, params, exception)
+//        }
     }
 
     fun registerSampleJob(job: Job = sampleJob) {

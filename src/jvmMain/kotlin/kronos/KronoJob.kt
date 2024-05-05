@@ -17,6 +17,9 @@ data class KronoJob(
      */
     val jobName: String,
     val params: Map<String, String>,
+    /**
+     * This should be in UTC Format
+     */
     val startTime: Long,
     val endTime: Long? = null,
     val interval: Duration? = null,
@@ -35,7 +38,7 @@ data class KronoJob(
      * This is to prevent race conditions when using microservices
      */
     val locks: Int = 0,
-    val overshotAction: OvershotAction = OvershotAction.Drop,
+    val overshotAction: OvershotAction,
 ) : Model {
     val repeatedJob: Boolean
         get() = periodic != null || interval != null

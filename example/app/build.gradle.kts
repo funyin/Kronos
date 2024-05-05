@@ -14,8 +14,8 @@ repositories {
 }
 
 dependencies {
-    implementation("com.funyinkash:kronos:0.0.3")
-//    implementation(project(":kronos"))
+//    implementation("com.funyinkash:kronos:0.0.3")
+    implementation(project(":kronos"))
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:5.9.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "com.funyinkash"
-version = "0.0.4-SNAPSHOT"
+version = "0.0.5-SNAPSHOT"
 //version = "0.0.4"
 
 repositories {

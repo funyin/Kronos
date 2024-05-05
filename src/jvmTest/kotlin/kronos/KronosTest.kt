@@ -177,11 +177,11 @@ class KronosTest {
 //            while (Kronos.coroutineScope.) {
 //
 //            }
-            verify { spyJob.onFail(any(), any()) }
+            verify(atLeast = 1) { spyJob.onFail(any(), any(), any()) }
         }
 
         @Test
-        fun RetryFailed() = runTest {
+        fun `retry failed jobs`() = runTest {
             val spyJob = spyk<Job>(TestDataProvider.sampleJob)
             coEvery { spyJob.execute(any(), any()) } coAnswers { false }
             every { spyJob.retries } returns 2
@@ -191,8 +191,8 @@ class KronosTest {
 //            while (Kronos.coroutineScope.) {
 //
 //            }
-            verify { spyJob.onFail(any(), any()) }
-            verify(exactly = 2) { spyJob.onRetryFail(any(), any(), any()) }
+            verify { spyJob.onFail(any(), any(), any()) }
+            verify(exactly = 2) { spyJob.onRetryFail(any(), any(), any(), any()) }
         }
     }
 

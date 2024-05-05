@@ -14,13 +14,16 @@ import kotlin.time.toDuration
  * @param interval The time between jobs. Specify a value to make the job repeated.
  * If the period is **null** then the job will be treated asa one time Job
  * It is advised to use a minimum of 1 minute, so you don't choke your resources
- * @param delay
+ * @param delay if delay is not specified or is set to zero, The job will run at the next minute
  * @param endTime The job wil not be repeated if it is after this time
  * @param maxCycles The job wil not be repeated after this number of cycles
  * @param retries The number of retries if the job execution fails.
  * Falls back to the [Job.retries] of the Job if not specified
  * @param params The data that will be made available to your job during execution. Note that
  * **'cycleNumber'** is a reserved name and should not be included
+ * @param overshotAction What do you want to happen when the job runner finds that the job start time is in the past.
+ * This can happen when the job does no run at the start time because the system is down or was
+ * not handled by the job runner
  */
 suspend fun Kronos.schedule(
     jobName: String,
@@ -30,6 +33,7 @@ suspend fun Kronos.schedule(
     maxCycles: Int? = null,
     retries: Int? = null,
     params: Map<String, String>,
+    overshotAction: OvershotAction = OvershotAction.Drop,
 ): String? {
     return schedule(
         jobName = jobName,
@@ -38,7 +42,8 @@ suspend fun Kronos.schedule(
         endTime = endTime,
         maxCycles = maxCycles,
         retries = retries,
-        params = params
+        params = params,
+        overshotAction = overshotAction
     )
 }
 
@@ -46,13 +51,16 @@ suspend fun Kronos.schedule(
  * @param jobName The unique name of a job that has already been registered
  * @param interval The time between jobs. Specify a value to make the job repeated.
  * If the period is **null** then the job will be treated asa one time Job
- * It is advised to use a minimum of 1 minute, so you don't choke your resources
+ * It is advised to use a minimum of 1 minute which is the highest precision, so you don't choke your resources
  * @param startTime
  * @param endTime The job wil not be repeated if it is after this time
  * @param maxCycles The job wil not be repeated after this number of cycles
  * @param retries The number of retries if the job execution fails.
  * Falls back to the [Job.retries] of the Job if not specified
  * @param params the data that will be made available to your job during execution
+ * @param overshotAction What do you want to happen when the job runner finds that the job start time is in the past.
+ * This can happen when the job does no run at the start time because the system is down or was
+ * not handled by the job runner
  */
 suspend fun Kronos.schedule(
     jobName: String,
@@ -62,6 +70,7 @@ suspend fun Kronos.schedule(
     maxCycles: Int? = null,
     retries: Int? = null,
     params: Map<String, String>,
+    overshotAction: OvershotAction = OvershotAction.Drop,
 ): String? {
 
     val job = getValidJob(jobName)
@@ -73,6 +82,7 @@ suspend fun Kronos.schedule(
         maxCycles = maxCycles,
         retries = retries ?: job.retries,
         interval = interval,
+        overshotAction = overshotAction
     )
     return addJob(kronoJob)
 }
@@ -88,6 +98,9 @@ suspend fun Kronos.schedule(
  * Falls back to the [Job.retries] of the Job if not specified
  * @param params The data that will be made available to your job during execution. Note that
  * **'cycleNumber'** is a reserved name and should not be included
+ * @param overshotAction What do you want to happen when the job runner finds that the job start time is in the past.
+ * This can happen when the job does no run at the start time because the system is down or was
+ * not handled by the job runner
  */
 suspend fun Kronos.schedulePeriodic(
     jobName: String,
@@ -97,6 +110,7 @@ suspend fun Kronos.schedulePeriodic(
     maxCycles: Int? = null,
     retries: Int? = null,
     params: Map<String, String>,
+    overshotAction: OvershotAction = OvershotAction.Drop,
 ): String? {
     return schedulePeriodic(
         jobName = jobName,
@@ -105,7 +119,8 @@ suspend fun Kronos.schedulePeriodic(
         endTime = endTime,
         maxCycles = maxCycles,
         retries = retries,
-        params = params
+        params = params,
+        overshotAction = overshotAction
     )
 }
 
@@ -120,6 +135,9 @@ suspend fun Kronos.schedulePeriodic(
  * Falls back to the [Job.retries] of the Job if not specified
  * @param params The data that will be made available to your job during execution. Note that
  * **'cycleNumber'** is a reserved name and should not be included
+ * @param overshotAction What do you want to happen when the job runner finds that the job start time is in the past.
+ * This can happen when the job does no run at the start time because the system is down or was
+ * not handled by the job runner
  */
 suspend fun Kronos.schedulePeriodic(
     jobName: String,
@@ -129,6 +147,7 @@ suspend fun Kronos.schedulePeriodic(
     maxCycles: Int? = null,
     retries: Int? = null,
     params: Map<String, String>,
+    overshotAction: OvershotAction = OvershotAction.Drop,
 ): String? {
 
     val job = getValidJob(jobName)
@@ -140,6 +159,7 @@ suspend fun Kronos.schedulePeriodic(
         maxCycles = maxCycles,
         retries = retries ?: job.retries,
         periodic = periodic,
+        overshotAction = overshotAction
     )
     return addJob(kronoJob)
 }

@@ -70,27 +70,38 @@ internal suspend fun Kronos.runJob(
                 if (underEndTime && underMaxCycles)
                     reschedule()
                 else
-                    dropJob().takeIf { it }.also {
-                        job.onDrop(kronoJob.id, lastJob = true)
-                    }
+                    dropJob()
+                        .takeIf { it }
+                        .also {
+                            job.onDrop(kronoJob.id, lastJob = true)
+                        }
             } else
                 reschedule()
         }
+
+        var exception: Exception? = null
         val execute: suspend () -> Boolean = {
-            job.execute(cycleNumber, jobParams)
+            try {
+                job.execute(cycleNumber, jobParams)
+            } catch (e: Exception) {
+                println(e)
+                exception = e
+                false
+            }
         }
 
         var success = execute()
         var retries = kronoJob.retries
         if (!success) {
-            job.onFail(cycleNumber = cycleNumber, jobParams)
+            job.onFail(cycleNumber = cycleNumber, jobParams, exception)
             while (!success && retries > 0) {
                 success = execute()
                 if (!success)
                     job.onRetryFail(
                         retryCount = (kronoJob.retries - retries),
                         cycleNumber = cycleNumber,
-                        params = jobParams
+                        params = jobParams,
+                        exception = exception
                     )
                 retries--
             }

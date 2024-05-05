@@ -48,6 +48,7 @@ class SchedulerTest {
                 startTime = currentTime.plus(1L.toDuration(DurationUnit.MINUTES)).toEpochMilliseconds(),
                 params = emptyMap(),
                 periodic = Periodic.everyYear(month, dayOfMonth, 5, 5),
+                overshotAction = OvershotAction.Drop
             )
         )
 
@@ -82,6 +83,7 @@ class SchedulerTest {
                 startTime = currentTime.plus(1L.toDuration(DurationUnit.MINUTES)).toEpochMilliseconds(),
                 params = emptyMap(),
                 periodic = Periodic.everyMonth(8, 5, 5),
+                overshotAction = OvershotAction.Drop
             )
         )
 
@@ -116,6 +118,7 @@ class SchedulerTest {
                 startTime = currentTime.plus(1L.toDuration(DurationUnit.MINUTES)).toEpochMilliseconds(),
                 params = emptyMap(),
                 periodic = Periodic.everyWeek(dayOfWeek, hour, 5),
+                overshotAction = OvershotAction.Drop
             )
         )
 
@@ -148,6 +151,7 @@ class SchedulerTest {
                 startTime = currentTime.plus(1L.toDuration(DurationUnit.MINUTES)).toEpochMilliseconds(),
                 params = emptyMap(),
                 periodic = Periodic.everyDay(5, 5),
+                overshotAction = OvershotAction.Drop
             )
         )
 
@@ -177,6 +181,7 @@ class SchedulerTest {
                 startTime = currentTime.plus(1L.toDuration(DurationUnit.MINUTES)).toEpochMilliseconds(),
                 params = emptyMap(),
                 periodic = Periodic.everyHour(5),
+                overshotAction = OvershotAction.Drop
             )
         )
 
@@ -202,7 +207,8 @@ class SchedulerTest {
                 jobName = TestDataProvider.sampleSpyJob.name,
                 startTime = Clock.System.now().toEpochMilliseconds(),
                 params = emptyMap(),
-                periodic = Periodic.everyMinute()
+                periodic = Periodic.everyMinute(),
+                overshotAction = OvershotAction.Drop
             )
         )
 
@@ -232,6 +238,7 @@ class SchedulerTest {
                 jobName = TestDataProvider.sampleSpyJob.name,
                 startTime = currentTime.plus(1.minutes).toEpochMilliseconds(),
                 params = emptyMap(),
+                overshotAction = OvershotAction.Drop
 //                interval = 1.minutes,
             )
         )
@@ -300,7 +307,8 @@ class SchedulerTest {
                 startTime = currentTime.plus(1L.toDuration(DurationUnit.MINUTES)).toEpochMilliseconds(),
                 params = emptyMap(),
                 periodic = Periodic.everyMinute(),
-                endTime = currentTime.plus(1.minutes).toEpochMilliseconds()
+                endTime = currentTime.plus(1.minutes).toEpochMilliseconds(),
+                overshotAction = OvershotAction.Drop
             )
         )
 
@@ -356,6 +364,7 @@ class SchedulerTest {
                 jobName = TestDataProvider.sampleSpyJob.name,
                 startTime = currentTime.plus(1L.toDuration(DurationUnit.MINUTES)).toEpochMilliseconds(),
                 params = emptyMap(),
+                overshotAction = OvershotAction.Drop
             )
         )
 
@@ -381,7 +390,7 @@ class SchedulerTest {
         every { Kronos.coroutineScope.isActive } returns isActive
 
         val mockkDb = mockk<MongoCollection<KronoJob>>()
-        every { mockkDb.namespace.databaseName } returns  "mockk"
+        every { mockkDb.namespace.databaseName } returns "mockk"
         every { Kronos.collection } returns mockkDb
         val kacheController = mockk<KacheController> {
             coEvery { getAll<KronoJob>(any(), any(), any(), any()) } returns listOf(kronoJob)
