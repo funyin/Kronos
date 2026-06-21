@@ -5,6 +5,7 @@ package kronos
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
@@ -17,8 +18,7 @@ import org.junit.jupiter.api.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.DurationUnit
-import kotlin.time.toDuration
+import kotlin.time.Duration.Companion.seconds
 
 
 class KronosTest {
@@ -81,7 +81,7 @@ class KronosTest {
             registerSampleJob()
             val exception = assertThrows<IllegalStateException> { registerSampleJob() }
             assertEquals(exception.message, "Job with name: '${sampleJob.name}' already registered")
-            assertEquals(Kronos.jobs, mutableMapOf<String, Job>(sampleJob.name to sampleJob))
+            assertEquals(Kronos.jobs, mutableMapOf(sampleJob.name to sampleJob))
         }
 
         @Test
@@ -99,7 +99,7 @@ class KronosTest {
 
         @Test
         fun `drop Job`() = runTest {
-            val spyJob = spyk(TestDataProvider.sampleJob)
+            val spyJob = spyk(sampleJob)
             registerSampleJob(spyJob)
             val job1Id = scheduleSampleJob()
             val job2Id = scheduleSampleJob()
@@ -124,15 +124,19 @@ class KronosTest {
             every { jobType1.name } returns "type1"
             every { jobType1.retries } returns 0
             every { jobType1.onDrop(any(), any()) } returns Unit
+            every { jobType1.challengeRun(any(), any()) } returns false
+            every { jobType1.onFail(any(), any(), any()) } just runs
             val jobType2 = mockk<Job>()
             every { jobType2.name } returns "type2"
             every { jobType2.retries } returns 0
             every { jobType2.onDrop(any(), any()) } returns Unit
+            every { jobType2.challengeRun(any(), any()) } returns false
+            every { jobType2.onFail(any(), any(), any()) } just runs
             Kronos.register(jobType1)
             Kronos.register(jobType2)
 
-            val job1Id = Kronos.schedule(jobType1.name, delay = 1.toDuration(DurationUnit.MINUTES), params = emptyMap())
-            val job2Id = Kronos.schedule(jobType2.name, delay = 1.toDuration(DurationUnit.MINUTES), params = emptyMap())
+            val job1Id = Kronos.schedule(jobType1.name, delay = 1.minutes, params = emptyMap())
+            val job2Id = Kronos.schedule(jobType2.name, delay = 1.minutes, params = emptyMap())
             //both jobs are loaded
             assert(Kronos.checkJob(job1Id!!) != null)
             assert(Kronos.checkJob(job2Id!!) != null)
@@ -165,11 +169,24 @@ class KronosTest {
                 println(task)
                 assert(task == null)
             }
+            assert(Kronos.allJobs(sampleJob.name).isEmpty())
+            assert(Kronos.allJobs().isEmpty())
+        }
+
+        @Test
+        fun allJobs() = runTest {
+            registerSampleJob()
+            val jobs = listOf(
+                scheduleSampleJob(),
+                scheduleSampleJob(),
+                scheduleSampleJob(),
+            )
+            assert(Kronos.allJobs(sampleJob.name).size == jobs.size)
         }
 
         @Test
         fun failedJob() = runTest {
-            val spyJob = spyk<Job>(TestDataProvider.sampleJob)
+            val spyJob = spyk<Job>(sampleJob)
             coEvery { spyJob.execute(any(), any()) } coAnswers { false }
             registerSampleJob(spyJob)
             scheduleSampleJob()
@@ -182,7 +199,7 @@ class KronosTest {
 
         @Test
         fun `retry failed jobs`() = runTest {
-            val spyJob = spyk<Job>(TestDataProvider.sampleJob)
+            val spyJob = spyk<Job>(sampleJob)
             coEvery { spyJob.execute(any(), any()) } coAnswers { false }
             every { spyJob.retries } returns 2
             registerSampleJob(spyJob)
@@ -193,6 +210,29 @@ class KronosTest {
 //            }
             verify { spyJob.onFail(any(), any(), any()) }
             verify(exactly = 2) { spyJob.onRetryFail(any(), any(), any(), any()) }
+        }
+
+        @Test
+        fun `loadTest`() = runTest(timeout = 60.seconds) {
+            val spyJob = spyk<Job>(sampleJob)
+            coEvery { spyJob.execute(any(), any()) } coAnswers { true }
+            every { spyJob.retries } returns 1
+            registerSampleJob(spyJob)
+            val currentInstant = Clock.System.now()
+            val jobCount = 10000
+            repeat(jobCount) { index ->
+                launch {
+                    Kronos.schedule(
+                        sampleJob.name,
+                        startTime = currentInstant.toEpochMilliseconds(),
+//                    delay = 1.toDuration(DurationUnit.MINUTES),
+//                    interval = 1.minutes,
+                        params = emptyMap()
+                    )
+                }
+            }
+            Kronos.handleJobs(currentInstant)
+            coVerify(exactly = jobCount) { spyJob.execute(any(), any()) }
         }
     }
 

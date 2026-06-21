@@ -1,9 +1,10 @@
 package kronos
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.datetime.Clock
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.plus
+import kotlinx.datetime.Instant
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
@@ -50,11 +51,12 @@ suspend fun Kronos.schedule(
 /**
  * @param jobName The unique name of a job that has already been registered
  * @param interval The time between jobs. Specify a value to make the job repeated.
+ * This will be set to 1 minute if it is null and [maxCycles] !=null
  * If the period is **null** then the job will be treated asa one time Job
  * It is advised to use a minimum of 1 minute which is the highest precision, so you don't choke your resources
  * @param startTime
  * @param endTime The job wil not be repeated if it is after this time
- * @param maxCycles The job wil not be repeated after this number of cycles
+ * @param maxCycles The job wil not be repeated after this number of cycles.
  * @param retries The number of retries if the job execution fails.
  * Falls back to the [Job.retries] of the Job if not specified
  * @param params the data that will be made available to your job during execution
@@ -81,7 +83,7 @@ suspend fun Kronos.schedule(
         endTime = endTime,
         maxCycles = maxCycles,
         retries = retries ?: job.retries,
-        interval = interval,
+        interval = if (maxCycles != null && interval == null) 1.minutes else interval,
         overshotAction = overshotAction
     )
     return addJob(kronoJob)

@@ -26,11 +26,20 @@ internal suspend fun Kronos.runJob(
         if (job.challengeRun(cycleNumber, jobParams))
             return@let
 
-        kacheController.set(collection, KronoJob.serializer()) {
+        kacheController.set(collection, serializer = KronoJob.serializer()) {
             findOneAndUpdate(Filters.eq("_id", kronoJob.id), Updates.inc(KronoJob::locks.name, 1))
         }
 
-        if (kronoJob.interval != null || kronoJob.periodic != null) {
+        val underEndTime =
+            kronoJob.endTime?.let {
+                currentInstant < Instant.fromEpochMilliseconds(it)
+            } ?: true
+        val underMaxCycles = kronoJob.maxCycles?.let {
+            cycleNumber < it
+        } ?: true
+        val canReschedule = underEndTime && underMaxCycles
+
+        if (kronoJob.repeatedJob) {
             val reschedule: suspend () -> Unit = {
 
                 val params = jobParams.toMutableMap()
@@ -40,7 +49,7 @@ internal suspend fun Kronos.runJob(
                     jobName = kronoJob.jobName,
                     //This is what sets the start time for the next job
                     startTime = if (kronoJob.periodic != null)
-                        nextPeriodicTime(currentInstant.toEpochMilliseconds(), kronoJob.periodic)
+                        nextPeriodicTime(kronoJob.startTime, kronoJob.periodic)
                     else
                         delayToStartTime(delay = delay),
                     interval = kronoJob.interval,
@@ -59,24 +68,12 @@ internal suspend fun Kronos.runJob(
             }
 
             //Reschedule
-            if (kronoJob.endTime != null || kronoJob.maxCycles != null) {
-                val underEndTime =
-                    kronoJob.endTime?.let {
-                        currentInstant < Instant.fromEpochMilliseconds(it)
-                    } ?: true
-                val underMaxCycles = kronoJob.maxCycles?.let {
-                    cycleNumber < it
-                } ?: true
-                if (underEndTime && underMaxCycles)
-                    reschedule()
-                else
-                    dropJob()
-                        .takeIf { it }
-                        .also {
-                            job.onDrop(kronoJob.id, lastJob = true)
-                        }
-            } else
-                reschedule()
+            when {
+                kronoJob.closedEnd && canReschedule -> reschedule()
+                //open ended auto transactions
+                !kronoJob.closedEnd -> reschedule()
+            }
+
         }
 
         var exception: Exception? = null
@@ -93,23 +90,31 @@ internal suspend fun Kronos.runJob(
         var success = execute()
         var retries = kronoJob.retries
         if (!success) {
+            jobParams["retryCount"] = 0.toString()
             job.onFail(cycleNumber = cycleNumber, jobParams, exception)
             while (!success && retries > 0) {
+                retries--
+                val retryCount = kronoJob.retries - retries
+                jobParams["retryCount"] = "$retryCount"
                 success = execute()
                 if (!success)
                     job.onRetryFail(
-                        retryCount = (kronoJob.retries - retries),
+                        retryCount = retryCount,
                         cycleNumber = cycleNumber,
                         params = jobParams,
                         exception = exception
                     )
-                retries--
             }
-        } else
-            job.onSuccess(cycleNumber = cycleNumber, jobParams)
-        dropJob().takeIf { it }.also {
-            job.onDrop(kronoJob.id, lastJob = !kronoJob.repeatedJob)
         }
+        if (success)
+            job.onSuccess(cycleNumber = cycleNumber, jobParams)
+        dropJob()
+            .takeIf { it }
+            .also {
+                val lastCycle = if (kronoJob.repeatedJob) !canReschedule else true
+                if (lastCycle)
+                    job.onLasCycleDrop(kronoJob.id, jobParams)
+            }
 
     } ?: IllegalStateException("Job with name '${kronoJob.jobName}' is not registered")
 }

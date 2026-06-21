@@ -34,7 +34,7 @@ interface Job {
 
     /**
      * call back for failure during retries
-     * @param retryCount the number of retries this will go from 0 -> ([Job.retries]-1)
+     * @param retryCount the number of retries this will go from 1 -> ([Job.retries])
      * That is because the firs call back [retryCount] will be 0 because the number of retries is 0
      * @param cycleNumber this would be greater than 1 for a repeated job [Job.retries]
      */
@@ -91,4 +91,9 @@ interface Job {
      * @param lastJob will be true if this is the last job
      */
     fun onDrop(jobId: String, lastJob: Boolean) {}
+
+    /**
+     * Call back for when the last cycle of a job has been reached and the job has been dropped
+     */
+    fun onLasCycleDrop(jobId: String, params: Map<String, Any>) {}
 }

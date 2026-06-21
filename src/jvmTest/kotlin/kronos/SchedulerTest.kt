@@ -8,16 +8,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.runCurrent
-import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
+import kotlinx.coroutines.test.*
+import kotlinx.datetime.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import java.time.Month
 import kotlin.coroutines.CoroutineContext
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.minutes
@@ -76,11 +71,14 @@ class SchedulerTest {
     @Test
     fun `every month at dayOfMonth, hour and minute`() = runTest(timeout = 20.seconds) {
 
-        val currentTime = Clock.System.now()
+        val currentTime = LocalDateTime(
+            date = LocalDate(year = 2024, month = Month.JANUARY, dayOfMonth = 1),
+            time = LocalTime.fromSecondOfDay(1)
+        ).toInstant(TimeZone.UTC)
         val kronoJob = spyk<KronoJob>(
             KronoJob(
                 jobName = TestDataProvider.sampleSpyJob.name,
-                startTime = currentTime.plus(1L.toDuration(DurationUnit.MINUTES)).toEpochMilliseconds(),
+                startTime = currentTime.plus(1.minutes).toEpochMilliseconds(),
                 params = emptyMap(),
                 periodic = Periodic.everyMonth(8, 5, 5),
                 overshotAction = OvershotAction.Drop
@@ -208,12 +206,12 @@ class SchedulerTest {
                 startTime = Clock.System.now().toEpochMilliseconds(),
                 params = emptyMap(),
                 periodic = Periodic.everyMinute(),
+                maxCycles = 2,
                 overshotAction = OvershotAction.Drop
             )
         )
 
         extraMocks(kronoJob, TestDataProvider.sampleSpyJob)
-
 
         Kronos.handleJobs(Instant.fromEpochMilliseconds(kronoJob.startTime).plus(1.minutes))
         runCurrent()
@@ -386,15 +384,15 @@ class SchedulerTest {
 
     private fun TestScope.extraMocks(kronoJob: KronoJob, sampleJob: Job) {
         mockkObject(Kronos)
-        every { Kronos.init(any(), any()) } returns Unit
+        every { Kronos.init(any(), any(),any(),any(),any()) } returns Kronos
         every { Kronos.coroutineScope.isActive } returns isActive
 
         val mockkDb = mockk<MongoCollection<KronoJob>>()
         every { mockkDb.namespace.databaseName } returns "mockk"
         every { Kronos.collection } returns mockkDb
         val kacheController = mockk<KacheController> {
-            coEvery { getAll<KronoJob>(any(), any(), any(), any()) } returns listOf(kronoJob)
-            coEvery { set<KronoJob>(any(), any(), any()) } returns kronoJob
+            coEvery { getAll<KronoJob>(any(), any(), any(), any(),any()) } returns listOf(kronoJob)
+            coEvery { set<KronoJob>(any(), any(), any(),any(),any()) } returns kronoJob
             coEvery { remove<KronoJob>(any(), any(), any()) } returns true
         }
         every { kacheController["cacheKey"](any<MongoCollection<KronoJob>>()) } returns ""

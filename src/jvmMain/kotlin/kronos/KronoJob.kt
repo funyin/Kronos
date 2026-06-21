@@ -42,6 +42,8 @@ data class KronoJob(
 ) : Model {
     val repeatedJob: Boolean
         get() = periodic != null || interval != null
+    val closedEnd: Boolean
+        get() = endTime != null || maxCycles != null
 }
 
 /**
@@ -70,6 +72,15 @@ enum class OvershotAction {
     Nothing
 }
 
+/**
+ * Not that time is in UTC so adjust for the expected time in your time-zone.
+ *
+ * E.g for 8am WAT you'll do
+ * ```
+ * val periodic = Periodic.everyDay(hour=7, minute=0)
+ * ````
+ * which is 7am UTC
+ */
 @Serializable
 class Periodic private constructor() {
     var dayOfWeek: DayOfWeek? = null

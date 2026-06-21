@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="sample" type="JetRunConfigurationType">
+    <option name="MAIN_CLASS_NAME" value="example.AppKt" />
+    <module name="example.app.main" />
+    <shortenClasspath name="NONE" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+      <option name="RunConfigurationTask" enabled="true" run_configuration_name="example/docker-compose.yaml: Compose Deployment" run_configuration_type="docker-deploy" />
+    </method>
+  </configuration>
+</component>

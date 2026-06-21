@@ -1,5 +1,6 @@
 package kronos
 
+import co.touchlab.kermit.Logger
 import com.mongodb.client.model.Filters
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.toList
@@ -10,34 +11,40 @@ import kotlin.time.toDuration
 
 internal suspend fun Kronos.runner() {
     while (coroutineScope.isActive) {
-        delay(1.minutes)
         println()
-        println("Kronos Ping")
+        Logger.d("Kronos Ping")
         println()
-
         handleJobs()
+        //Handling tasks before the delay so IT can start work as soon as it boots up
+        delay(1.minutes)
     }
 }
 
 internal suspend fun Kronos.handleJobs(currentInstant: Instant = Clock.System.now()) {
 
-    val response = kacheController.getAll(collection = collection, serializer = KronoJob.serializer()) {
-        find(Filters.empty()).toList()
-    }
+    try{
+        val response = kacheController.getAll(collection = collection, serializer = KronoJob.serializer()) {
+            find(Filters.empty()).toList()
+        }
 
-
-    coroutineScope {
-        for (kronoJob in response) {
-            launch {
-                handleJob(kronoJob, currentInstant)
+        lastPingTime = Clock.System.now().toLocalDateTime(TimeZone.UTC)
+        supervisorScope {
+            for (kronoJob in response) {
+                launch {
+                    handleJob(kronoJob, currentInstant)
+                }
             }
         }
+    }catch (e: Throwable){
+        onError?.invoke(e);
+        Logger.e("Runner error: ${e.message}",e)
     }
 }
 
-private suspend fun Kronos.handleJob(kronoJob: KronoJob, currentInstant: Instant) {
+suspend fun Kronos.handleJob(kronoJob: KronoJob, currentInstant: Instant = Clock.System.now()) {
 
     val validationResult = validate(kronoJob, currentInstant)
+
     when {
         validationResult == ValidationResult.overshot -> {
             when (kronoJob.overshotAction) {
@@ -91,9 +98,8 @@ private fun validate(
 
         when (job.periodic.every) {
             Periodic.Every.minute -> true
-            Periodic.Every.hour -> {
-                matchMinute
-            }
+
+            Periodic.Every.hour -> matchMinute
 
             Periodic.Every.day -> {
                 matchHour && matchMinute

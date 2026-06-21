@@ -8,16 +8,17 @@ plugins {
 }
 
 group = "com.funyinkash"
-version = "0.0.5-SNAPSHOT"
-//version = "0.0.4"
+version = "0.0.7-SNAPSHOT"
 
 repositories {
     mavenCentral()
-//    maven {
-//        url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-//    }
+    maven {
+        url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+    }
 //    mavenLocal()
 }
+
+
 
 kotlin {
 
@@ -55,7 +56,11 @@ kotlin {
 
 
     sourceSets {
-        val commonMain by getting
+        val commonMain by getting {
+            dependencies {
+                implementation("co.touchlab:kermit:2.0.4")
+            }
+        }
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
@@ -65,10 +70,11 @@ kotlin {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-                implementation("com.funyinkash.kachecontroller:mongo-redis:1.0.0")
+                implementation("com.funyinkash.kachecontroller:mongo-redis:1.0.2-SNAPSHOT")
                 implementation("org.mongodb:mongodb-driver-kotlin-coroutine:4.11.1")
                 implementation("org.mongodb:bson-kotlinx:4.11.1")
                 implementation("io.lettuce:lettuce-core:6.3.0.RELEASE")
+                implementation("co.touchlab:kermit:2.0.4")
             }
         }
         val jvmTest by getting {

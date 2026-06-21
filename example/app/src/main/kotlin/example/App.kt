@@ -3,21 +3,23 @@ package example
 
 import kotlinx.coroutines.delay
 import kronos.*
-import java.time.Instant
 import kotlin.time.Duration.Companion.minutes
 
 suspend fun main() {
 
     //Initialize
+    // make sure you have your container ready
     Kronos.init(
-        mongoConnectionString = "mongodb://localhost:27017",
+        mongoConnectionString = "mongodb://localhost:27016",
         redisConnectionString = "redis://localhost:6379"
     )
     //Register a Job
     Kronos.register(SayHello)
+    Kronos.register(TestJob)
     //Schedule a one time job
     Kronos.schedule(
-        jobName = SayHello.name,/*say-hello*/
+        jobName = SayHello.name,
+        /*say-hello*/
 //        startTime = Instant.now().plusSeconds(60).toEpochMilli(),
         params = mapOf(
             "firsName" to "Funyin",
@@ -46,7 +48,7 @@ suspend fun main() {
     jobId?.let { Kronos.dropJobId(it) }
     //Drop Job By Name
     jobId?.let { Kronos.dropJob(SayHello.name) }
-    Kronos.dropAll()
+//    Kronos.dropAll()
     delay(1000 * 60 * 7)
 }
 
@@ -60,6 +62,27 @@ object SayHello : Job {
     override suspend fun execute(cycleNumber: Int, params: Map<String, Any>): Boolean {
         super.execute(cycleNumber, params)
         println("Hello ${params["firsName"]} ${params["lastName"]} $cycleNumber")
+        //Testing functionality if scheduling an instant job within an execution window: PASSED
+        Kronos.schedule(
+            TestJob.name,
+            maxCycles = 2,
+            params = mapOf()
+        )
+        return true
+    }
+
+}
+
+object TestJob : Job {
+    override val name: String
+        get() = "test-hello"
+
+    override val retries: Int
+        get() = 2
+
+    override suspend fun execute(cycleNumber: Int, params: Map<String, Any>): Boolean {
+        super.execute(cycleNumber, params)
+        println("TESTJOB ${params["firsName"]} ${params["lastName"]} $cycleNumber")
         return true
     }
 
