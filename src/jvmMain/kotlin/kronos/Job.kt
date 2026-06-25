@@ -68,8 +68,23 @@ interface Job {
     }
 
     /**
-     * Custom pre-run gate called after Kronos's own validation. Return `true` to skip this cycle.
-     * Use this for runtime conditions (e.g. skip on public holidays) that can't be expressed in the schedule.
+     * Custom pre-run gate called after Kronos's own scheduling validation.
+     * Return `true` to **skip** this cycle; return `false` (default) to allow execution.
+     *
+     * Use this to express scheduling patterns that [Periodic] alone cannot:
+     *
+     * - **Bi-weekly**: schedule with [Periodic.everyWeek] and skip odd cycles:
+     *   `return cycleNumber % 2 != 0`
+     *
+     * - **Specific day of week at a custom interval**: schedule with [Periodic.everyDay]
+     *   and skip any day that isn't the target:
+     *   `return LocalDate.now().dayOfWeek != DayOfWeek.TUESDAY`
+     *
+     * - **Second Tuesday of the month**: combine both — schedule weekly, skip non-Tuesdays
+     *   and weeks that aren't the second occurrence in the month.
+     *
+     * Unlike cron expressions, this logic is plain Kotlin, so arbitrarily complex
+     * runtime conditions (feature flags, public holidays, database lookups) are straightforward.
      */
     fun challengeRun(cycleNumber: Int, params: Map<String, Any>): Boolean = false
 

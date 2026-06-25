@@ -11,57 +11,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-#        with:
-#          token: ${{ secrets.STANDARDS_TOKEN }}
-#      - name: Set up Python 3.10
-#        uses: actions/setup-python@v4
-#        with:
-#          python-version: '3.10'
-#      - name: Install dependencies
-#        run: pip install requests
-      - name: Set up JDK 18
-        uses: actions/setup-java@v3
+
+      - name: Set up JDK 19
+        uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '19'
           distribution: 'temurin'
 
-      - name: Echo secrets
+      - name: Write secrets to files
         run: |
           echo "$PROPERTIES_FILE" >> ./gradle.properties
-          cat ./gradle.properties
           echo "$GPG_SECRET_FILE" >> ./secret-key.ascii
-          cat ./secret-key.ascii
         shell: bash
         env:
-            PROPERTIES_FILE: ${{secrets.PROPERTIES_FILE}}
-            GPG_SECRET_FILE: ${{secrets.GPG_SECRET_FILE}}
-
+          PROPERTIES_FILE: ${{ secrets.PROPERTIES_FILE }}
+          GPG_SECRET_FILE: ${{ secrets.GPG_SECRET_FILE }}
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/actions/setup-gradle@v3
+
       - name: Test and collect coverage
         run: |
           ./gradlew build
-          ./gradlew test
           ./gradlew koverXmlReport
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4-beta
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./build/reports/kover/report.xml
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-          files: ./build/reports/kover/report.xml
-#      - name: Check coverage
-#        run: python request.py
-#        env:
-#          API_KEY: ${{ secrets.API_KEY }}
-#          CORRECT_COVERAGE: ${{ secrets.CORRECT_COVERAGE }}
-#      - name: Upstream to Standards
-#        env:
-#          GH_TOKEN: ${{ secrets.STANDARDS_TOKEN }}
-#          COVERAGE_SOURCE_FILE: ${{ secrets.COVERAGE_SOURCE_FILE }}
-#        if: ${{ github.event_name == 'push'}}
-#        run: |
-#          wget --header "Authorization: token ${GH_TOKEN}" \
-#          --header "Accept: application/vnd.github.v3.raw" \
-#          https://api.github.com/repos/codecov/standards/contents/upstream.sh
-#          bash upstream.sh

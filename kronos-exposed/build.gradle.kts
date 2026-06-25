@@ -5,6 +5,7 @@ plugins {
     id("org.jetbrains.dokka")
     `maven-publish`
     signing
+    id("com.gradleup.nmcp") version "0.0.9"
 }
 
 repositories {
@@ -75,8 +76,16 @@ publishing {
     }
 }
 
+nmcp {
+    publishAllPublications {
+        username.set(project.properties["centralPortal.username"].toString())
+        password.set(project.properties["centralPortal.password"].toString())
+        publicationType.set("AUTOMATIC")
+    }
+}
+
 signing {
-    val file = File(rootProject.projectDir, "${project.properties["signing.secretKeyFile"]}")
+    val file = File("${project.properties["signing.secretKeyFile"]}")
     useInMemoryPgpKeys(
         file.readText(),
         project.properties["signing.password"].toString(),

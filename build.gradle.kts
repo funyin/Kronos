@@ -5,6 +5,7 @@ plugins {
     `maven-publish`
     signing
     id("org.jetbrains.kotlinx.kover") version "0.7.5"
+    id("com.gradleup.nmcp") version "0.0.9"
 }
 
 group = "com.funyinkash"
@@ -148,27 +149,20 @@ publishing {
         }
     }
 
-    repositories {
-        maven {
-            name = "OSSHR"
+}
 
-            val isSnapshot = version.toString().endsWith("SNAPSHOT")
-            url = uri(
-                if (isSnapshot)
-                    "https://s01.oss.sonatype.org/content/repositories/snapshots/"
-                else
-                    "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
-            )
-            credentials {
-                username = project.properties["osshr.username"].toString()
-                password = project.properties["osshr.password"].toString()
-            }
-        }
+nmcp {
+    publishAllPublications {
+        username.set(project.properties["centralPortal.username"].toString())
+        password.set(project.properties["centralPortal.password"].toString())
+        // AUTOMATIC releases to Central immediately after validation.
+        // Change to "USER_MANAGED" to review in the portal UI before releasing.
+        publicationType.set("AUTOMATIC")
     }
 }
 
 signing {
-    val file = File("${projectDir}/${project.properties["signing.secretKeyFile"]}")
+    val file = File("${project.properties["signing.secretKeyFile"]}")
     useInMemoryPgpKeys(
         file.readText(),
         project.properties["signing.password"].toString(),
