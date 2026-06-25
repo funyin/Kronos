@@ -162,14 +162,15 @@ nmcp {
 }
 
 signing {
-    val file = File("${project.properties["signing.secretKeyFile"]}")
-    useInMemoryPgpKeys(
-        file.readText(),
-        project.properties["signing.password"].toString(),
-    )
-
-    publishing.publications.forEach {
-        sign(it)
+    val keyFile = File("${project.properties["signing.secretKeyFile"]}")
+    if (keyFile.exists()) {
+        useInMemoryPgpKeys(
+            keyFile.readText(),
+            project.properties["signing.password"].toString(),
+        )
+        publishing.publications.forEach {
+            sign(it)
+        }
     }
 }
 
