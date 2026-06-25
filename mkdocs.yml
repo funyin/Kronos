@@ -1,8 +1,6 @@
-# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
-
 site_name: Kronos
 site_url: 'https://funyin.github.io/Kronos/'
-#site_url: 'http://localhost:8000/'
+
 theme:
   name: material
   custom_dir: overrides
@@ -22,7 +20,6 @@ theme:
     - content.code.copy
     - navigation.footer
 
-
 markdown_extensions:
   - admonition
   - pymdownx.details
@@ -34,14 +31,24 @@ plugins:
   - search
   - social:
       enabled: !ENV [ENABLE_SOCIAL_CARDS, false]
-  - git-revision-date-localized:
-      enable_creation_date: true
-      fallback_to_build_date: true
-  - git-committers:
-      repository: funyin/Kronos
-      branch: master
-  - awesome-pages
 
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Quick Start: quick_start.md
+  - Job:
+    - job/index.md
+    - Runner: job/runner.md
+  - Schedule:
+    - schedule/index.md
+    - Periodic: schedule/periodic.md
+  - Why & How: why_how.md
+  - Examples: examples/index.md
+  - KDoc: https://funyin.github.io/Kronos/kdoc/
+  - Roadmap: roadmap.md
+  - Community:
+    - community/index.md
+    - Contributing: community/contributing.md
 
 extra:
   social:

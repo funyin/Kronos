@@ -8,6 +8,9 @@ Kronos is split into a core framework and backend adapters. Choose a backend —
 
 ## Backend adapters
 
+!!! tip "Latest version"
+    Replace `KRONOS_VERSION` with the [latest release](https://github.com/funyin/Kronos/releases) (currently **0.0.8**) and `KACHE_VERSION` with the latest KacheController release (currently **1.0.6**).
+
 === "Kotlin Gradle Script"
 
     ```kotlin
@@ -15,8 +18,8 @@ Kronos is split into a core framework and backend adapters. Choose a backend —
 
     dependencies {
         // Pick one backend — the core kronos API is included automatically
-        implementation("com.funyinkash:kronos-mongo:$kronosVersion")
-        // or implementation("com.funyinkash:kronos-exposed:$kronosVersion")
+        implementation("com.funyinkash:kronos-mongo:KRONOS_VERSION")
+        // or implementation("com.funyinkash:kronos-exposed:KRONOS_VERSION")
     }
     ```
 
@@ -26,8 +29,8 @@ Kronos is split into a core framework and backend adapters. Choose a backend —
     repositories { mavenCentral() }
 
     dependencies {
-        implementation "com.funyinkash:kronos-mongo:$kronosVersion"
-        // or implementation "com.funyinkash:kronos-exposed:$kronosVersion"
+        implementation "com.funyinkash:kronos-mongo:KRONOS_VERSION"
+        // or implementation "com.funyinkash:kronos-exposed:KRONOS_VERSION"
     }
     ```
 
@@ -37,7 +40,7 @@ Kronos is split into a core framework and backend adapters. Choose a backend —
     <dependency>
         <groupId>com.funyinkash</groupId>
         <artifactId>kronos-mongo</artifactId>
-        <version>${kronosVersion}</version>
+        <version>KRONOS_VERSION</version>
     </dependency>
     ```
 
@@ -48,14 +51,14 @@ Kronos is split into a core framework and backend adapters. Choose a backend —
 | Artifact | Use case |
 |---|---|
 | `kachecontroller-cache-redis` | Production |
-| `kachecontroller-cache-memory` | Local dev / tests |
+| `kachecontroller-cache-memory` | Single-instance deployments, local dev, and tests (no Redis needed) |
 
 ```kotlin
-// Redis (production)
-implementation("com.funyinkash:kachecontroller-cache-redis:$kacheVersion")
+// Redis (production / multi-instance)
+implementation("com.funyinkash:kachecontroller-cache-redis:KACHE_VERSION")
 
-// In-memory (dev / tests — no Redis needed)
-implementation("com.funyinkash:kachecontroller-cache-memory:$kacheVersion")
+// In-memory (single-instance, local dev / tests — no Redis needed)
+implementation("com.funyinkash:kachecontroller-cache-memory:KACHE_VERSION")
 ```
 
 ## Using with Maven
@@ -65,12 +68,12 @@ implementation("com.funyinkash:kachecontroller-cache-memory:$kacheVersion")
     <dependency>
         <groupId>com.funyinkash</groupId>
         <artifactId>kronos-mongo</artifactId>
-        <version>${kronosVersion}</version>
+        <version>KRONOS_VERSION</version>
     </dependency>
     <dependency>
         <groupId>com.funyinkash</groupId>
         <artifactId>kachecontroller-cache-redis</artifactId>
-        <version>${kacheVersion}</version>
+        <version>KACHE_VERSION</version>
     </dependency>
 </dependencies>
 ```

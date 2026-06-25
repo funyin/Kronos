@@ -17,7 +17,7 @@ distributed safety, no framework lock-in.*
 |-----------|--------|---------|
 | Readable API | ✅ | No cron expressions — `Periodic.everyDay(hour=9, minute=0)` |
 | Persistence | ✅ | Jobs survive restarts via MongoDB or PostgreSQL |
-| Distributed safety | ✅ | Atomic conditional `$inc` lock prevents double execution |
+| Distributed safety | ✅ | Atomic conditional lock prevents double execution |
 | No framework lock-in | ✅ | Standalone library, zero SPI or DI requirement |
 | Pluggable storage | ✅ | `KronosStore` interface — swap Mongo / Postgres / in-memory |
 | Pluggable cache | ✅ | `CacheClient` interface — Redis / SQLite / in-memory |
@@ -69,8 +69,6 @@ tradeoffs. Sub-second precision is out of scope by design.
       interface, and the scheduling API. Cron is a single line in a file.
 
 ## How It Fares Against Competitors
-
-[Tabs]
 
 === "Quartz"
 
@@ -132,75 +130,109 @@ tradeoffs. Sub-second precision is out of scope by design.
     **Cron wins on:** Zero dependencies, sub-second precision, minimal
     resource usage, universal availability.
 
-## Efficiency Concerns
+## Efficiency
 
-### Tick overhead
+### Tick flow
 
-The runner coroutine fires every 60 seconds and executes one indexed query:
+Every 60 seconds the runner fires a single indexed query:
 
-```kotlin
-db.jobs.find({ startTime: { $lte: now }, locks: 0 }).hint({ startTime: 1, locks: 1 })
+```
+-- MongoDB
+db.jobs.find({ startTime: { $lte: now }, locks: 0 })
+
+-- SQL
+SELECT * FROM kronos_jobs WHERE start_time <= ? AND locks = 0
 ```
 
-With the composite index, this is an index-only scan on the due-job window.
-For a table of 1M jobs with 0.1% due per tick (~1 000 rows), the query
-completes in **&lt;5ms** on MongoDB 6.0 and **&lt;2ms** on PostgreSQL 15
-(SELECT with LIMIT + index scan).
+Both backends create a composite index on `(start_time, locks)` at
+initialization, so the query is a narrow index range scan over the due-job
+window rather than a full table scan.
 
-The cache is **not checked** on the tick path — it hits the DB directly.
-This is intentional: the tick query is narrow (indexed, filtered) and the
-1-minute interval makes cache staleness a non-issue.
+For **periodic** jobs, the query returns all jobs whose `startTime` is in the
+past and whose `locks` counter is zero. A second validation pass in the runner
+then checks whether the job's calendar pattern (hour, minute, day-of-week,
+etc.) matches the current UTC minute before dispatching. This two-stage
+approach keeps the DB query simple while supporting complex periodic patterns
+in application code.
 
 ### Read-path caching
 
-Operations like `findById`, `findAll`, and `findByName` go through
-KacheController, which checks the cache (Redis) first. Cache hit latency
-is **&lt;1ms** (local Redis) vs **10–50ms** for a MongoDB query. The
-write-through pattern (`kache.set { db.insert(...); value }`) keeps the
-cache consistent with no TTL coordination.
+`findById`, `findAll`, and `findByName` go through KacheController, which
+checks the cache (Redis or in-memory) first. The tick query (`fetchDueJobs`)
+bypasses the cache and always hits the DB — the 1-minute interval makes cache
+staleness a non-issue on the hot path, and the narrow indexed query is fast
+enough to not warrant caching.
 
 ### Lock acquisition
 
-`acquireLock` now uses a **conditional atomic update**:
+Kronos uses a **conditional atomic increment** to prevent duplicate execution
+across instances:
 
 ```
-// MongoDB
+-- MongoDB (atomic, single round-trip)
 findOneAndUpdate({ _id: id, locks: 0 }, { $inc: { locks: 1 } })
+→ returns the document before update, or null if locks ≠ 0
 
-// PostgreSQL
+-- SQL
 UPDATE kronos_jobs SET locks = locks + 1 WHERE id = ? AND locks = 0
 ```
 
-If the condition fails (`locks != 0`), the update returns `null` and
-execution is aborted via `?: return@let`. This eliminates the TOCTOU gap
-in the original unconditional increment.
+On the MongoDB backend, `acquireLock` returns `null` when another instance
+already holds the lock — execution aborts cleanly. On the SQL backend, the
+`UPDATE` is equally atomic, but the current implementation returns the job row
+regardless of whether the update was applied, meaning the null-check guard in
+the runner is ineffective under contention. This is a known gap (see below).
 
-The lock is **never released** — it functions as an execution marker, not
-a mutex. A job with `locks > 0` is skipped on subsequent ticks. This is
-safe because jobs are expected to be one-shot or have a bounded schedule;
-stuck jobs with `locks > 0` are dropped via `dropJobId` or by setting an
-`endTime`.
+The lock is never released. It functions as a one-shot execution marker: a job
+with `locks > 0` is permanently skipped by the runner, then dropped after
+execution completes.
 
 ### Resource profile
 
-| Resource | Idle | Peak (100 concurrent jobs) |
-|----------|------|---------------------------|
-| Heap | ~32 MB | ~128 MB |
-| CPU | 0% (suspended coroutine) | Spikes per tick |
-| DB connections | 1 pooled | 1–10 (Exposed or Mongo pool) |
+Measured against the MongoDB backend with a Redis cache, 100 concurrent
+trivial jobs (500 ms `delay`, no allocations), JVM max heap 2 GB:
+
+| Checkpoint | Heap used |
+|---|---|
+| Idle — after init, no jobs | ~50 MB |
+| After scheduling 100 jobs | ~66 MB |
+| Peak — during concurrent execution | ~67 MB |
+| After execution settled | ~67 MB |
+
+The ~17 MB delta between idle and 100 concurrent jobs reflects coroutines'
+low per-task overhead — a thread-based scheduler would consume roughly 1 MB
+of stack space per concurrent task. Real-world peaks depend on how much each
+job allocates during execution.
+
+The idle footprint (~50 MB) is driven by the MongoDB and Redis driver
+initialization, not Kronos itself. For containerised deployments,
+`-Xmx128m` is a safe floor for most workloads. Connection pool size is
+controlled by your MongoDB driver or `DataSource` configuration — Kronos
+does not manage it directly.
+
+| Resource | Idle | Active |
+|----------|------|--------|
+| Heap | ~50 MB | ~67 MB (100 concurrent jobs) |
+| CPU | ~0% (suspended coroutine) | Spikes per tick |
+| DB connections | Pool (driver-managed) | Pool (driver-managed) |
 | Cache connections | 0 (lazy) | 1 (Redis) |
 
-The idle profile is dominated by the JVM baseline (~16 MB). For
-containerised deployments, `-Xms16m -Xmx64m` is sufficient for most
-workloads.
+## Known Gaps
 
-### Known gaps
+- **No backpressure:** If a tick returns 10 000 due jobs, all are dispatched
+  concurrently via `supervisorScope`. There is no concurrency cap or worker
+  pool. Mitigation: use `endTime` or `maxCycles` to bound job volume, or batch
+  scheduling on the application side.
 
-- **No backpressure:** If the tick fetches 10 000 due jobs, all are
-  dispatched concurrently via `supervisorScope`. No concurrency cap or
-  worker pool. Mitigation: batch scheduling or `endTime` bounding.
-- **No retry backoff:** Retries fire immediately in a tight loop. A job
-  that always fails consumes one full DB tick in retry CPU. Planned:
-  exponential/fixed backoff.
-- **No metrics export:** No built-in Micrometer / OpenTelemetry
-  integration. Observability relies on the `Job` callbacks.
+- **No retry backoff:** Retries fire in a tight loop with no delay. A job that
+  always fails burns a full DB round-trip per retry within the same tick.
+  Planned: configurable fixed or exponential backoff.
+
+- **SQL locking gap:** `ExposedKronosStore.acquireLock` performs an atomic
+  conditional `UPDATE` but then unconditionally SELECTs and returns the row,
+  so it can return a non-null result even when the lock was not acquired. Under
+  concurrent load on the SQL backend, two instances could execute the same job.
+  The MongoDB backend does not have this issue. Fix planned.
+
+- **`InMemoryKronosStore` missing:** No in-process store exists for unit tests.
+  Tests currently require Testcontainers (real MongoDB + Redis). Planned.

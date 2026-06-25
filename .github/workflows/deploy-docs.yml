@@ -3,6 +3,11 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g. 0.0.8)'
+        required: true
 permissions:
   contents: write
 jobs:
@@ -18,30 +23,63 @@ jobs:
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
 
+      - name: Set up JDK 19
+        uses: actions/setup-java@v4
+        with:
+          java-version: '19'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Generate KDoc
+        run: ./gradlew dokkaHtml
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
-      - name: Install cairo (required by social plugin)
-        run: sudo apt-get install -y libcairo2-dev libfreetype6-dev libffi-dev libjpeg-dev libpng-dev libz-dev
 
       - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
 
       - uses: actions/cache@v4
         with:
-          key: mkdocs-material-${{ env.cache_id }}-${{ hashFiles('requirements.txt') }}
+          key: zensical-${{ env.cache_id }}-${{ hashFiles('requirements.txt') }}
           path: .cache
           restore-keys: |
-            mkdocs-material-
+            zensical-
 
       - run: pip install -r requirements.txt
 
       - name: Deploy docs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MKDOCS_GIT_COMMITTERS_APIKEY: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git fetch origin gh-pages
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${{ github.event.inputs.version || github.ref_name }}"
+          VERSION="${VERSION#v}"
           mike deploy --push --update-aliases "$VERSION" latest
           mike set-default --push latest
+
+      - name: Deploy KDoc
+        run: |
+          VERSION="${{ github.event.inputs.version || github.ref_name }}"
+          VERSION="${VERSION#v}"
+          git fetch origin gh-pages
+          git checkout gh-pages
+          rm -rf "kdoc/$VERSION"
+          mkdir -p "kdoc/$VERSION"
+          cp -r build/dokka/html/. "kdoc/$VERSION/"
+          cat > kdoc/index.html <<EOF
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta http-equiv="refresh" content="0; url=$VERSION/">
+            <script>window.location.href = "$VERSION/"</script>
+          </head>
+          <body>Redirecting to KDoc <a href="$VERSION/">$VERSION</a>…</body>
+          </html>
+          EOF
+          git add kdoc/
+          git diff --cached --quiet || git commit -m "deploy KDoc $VERSION"
+          git push origin gh-pages

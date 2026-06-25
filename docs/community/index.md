@@ -1,12 +1,18 @@
 # Community
-Kronos is nice, contribute and make yourself happy
 
-## Community Resources
-Find and Give Help
+Kronos is an open-source project and welcomes contributions of all kinds — bug reports, feature requests, documentation improvements, and code.
 
-- Kronos Forum (coming soon)
+## Get Help
 
-## Report Issues, Request Features, Get Code
+- **[GitHub Issues](https://github.com/funyin/Kronos/issues)** — Bug reports and feature requests
+- **[GitHub Discussions](https://github.com/funyin/Kronos/discussions)** — Questions, ideas, and general conversation
+- **[Source Code](https://github.com/funyin/Kronos)** — Browse, fork, and contribute
 
-- [Kronos issue tracker](https://github.com/funyin/Kronos/issues)
-- [Kronos source code repository](https://github.com/funyin/Kronos)
+## Stay Updated
+
+- Watch the [GitHub repository](https://github.com/funyin/Kronos) for releases
+- Follow [@funyin_kash](https://twitter.com/funyin_kash) on X for announcements
+
+## Contribute
+
+See [Contributing](contributing.md) for guidelines on submitting pull requests and adding examples.

@@ -26,11 +26,17 @@ here is important to you.
 
 ## Planned
 
-- **Backoff retry** — Configurable delay between retry attempts
-  (exponential or fixed).
+- **Backoff retry** — Configurable fixed or exponential delay between retry
+  attempts. Currently retries fire in a tight loop with no delay.
+- **SQL locking fix** — `ExposedKronosStore.acquireLock` should return `null`
+  when the conditional UPDATE affects 0 rows, matching the MongoDB backend's
+  behaviour and making the SQL backend safe under concurrent execution.
 - **`InMemoryKronosStore`** — No-database store for unit tests; eliminates
   Testcontainers dependency for scheduler logic tests.
-- **Dashboard** — Self-hosted UI (Kobweb) to view, log, and manage jobs.
-  Auth via time-rotating DB tokens.
-- **Micrometer / OpenTelemetry metrics** — Export tick duration, queue
-  depth, and execution counters.
+- **Kronos Service** — Standalone Docker image that exposes Kronos over a
+  REST API, enabling non-JVM languages to use Kronos without embedding the
+  library. Clients register jobs and receive execution callbacks via HTTP
+  webhooks. Official SDKs planned for Python, Node.js, Go, and Ruby.
+- **KronoWatch** — Commercial SaaS for monitoring and managing Kronos jobs.
+  Visualise job history, configure failure alerts, and manage schedules across
+  services. Separate product from the open-source library and Docker service.
