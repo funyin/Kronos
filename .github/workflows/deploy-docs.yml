@@ -40,7 +40,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MKDOCS_GIT_COMMITTERS_APIKEY: ${{ secrets.GITHUB_TOKEN }}
-          ENABLE_SOCIAL_CARDS: true
         run: |
           git fetch origin gh-pages
           VERSION="${GITHUB_REF_NAME#v}"
