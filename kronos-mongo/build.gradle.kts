@@ -30,6 +30,26 @@ val sourcesJar by tasks.registering(Jar::class) {
     from(sourceSets["main"].allSource)
 }
 
+tasks.withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
+    val displayName = "main"
+    if (!dokkaSourceSets.names.contains(displayName)) {
+        dokkaSourceSets.create(displayName)
+    }
+    dokkaSourceSets.named(displayName) {
+        sourceRoots.from(project.layout.projectDirectory.dir("src/main/kotlin"))
+    }
+}
+
+tasks.withType<org.jetbrains.dokka.gradle.DokkaTaskPartial>().configureEach {
+    val displayName = "main"
+    if (!dokkaSourceSets.names.contains(displayName)) {
+        dokkaSourceSets.create(displayName)
+    }
+    dokkaSourceSets.named(displayName) {
+        sourceRoots.from(project.layout.projectDirectory.dir("src/main/kotlin"))
+    }
+}
+
 val javadocJar by tasks.registering(Jar::class) {
     archiveClassifier.set("javadoc")
     dependsOn(tasks.dokkaHtml)

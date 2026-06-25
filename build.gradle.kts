@@ -100,6 +100,16 @@ kotlin {
     }
 }
 
+tasks.withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
+    val displayName = "jvmMain"
+    if (!dokkaSourceSets.names.contains(displayName)) {
+        dokkaSourceSets.create(displayName)
+    }
+    dokkaSourceSets.named(displayName) {
+        sourceRoots.from(project.layout.projectDirectory.dir("src/jvmMain/kotlin"))
+    }
+}
+
 val javaDocJar by tasks.registering(Jar::class) {
     dependsOn(tasks.dokkaHtml)
     archiveClassifier.set("javadoc")
