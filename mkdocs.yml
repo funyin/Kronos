@@ -32,7 +32,8 @@ markdown_extensions:
 
 plugins:
   - search
-  - social
+  - social:
+      enabled: !ENV [ENABLE_SOCIAL_CARDS, false]
   - git-revision-date-localized:
       enable_creation_date: true
       fallback_to_build_date: true
