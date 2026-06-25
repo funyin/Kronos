@@ -1,3 +1,9 @@
+## 0.0.8 - Jun 23
+- **Publication restructure**: `kronos-mongo` and `kronos-exposed` now expose core types transitively via `api`/`compile` scope
+- **Breaking**: Users no longer need to add `kronos` separately — the backend artifact pulls it in automatically
+- **New**: `kronos-exposed` now published as a standalone artifact
+- All artifacts are signed and include `-sources.jar` and `-javadoc.jar`
+
 ## 0.0.5 - May 11
 - Implemented fix that allows jobs to be scheduled and executed within execution window
 - Eagerly execute jobs instead of starting out with 1-minute delay

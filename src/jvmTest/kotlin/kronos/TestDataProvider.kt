@@ -1,10 +1,10 @@
 package kronos
 
-import com.mongodb.kotlin.client.coroutine.MongoClient
+import com.funyinkash.kachecontroller.cache.RedisCacheClient
 import com.redis.testcontainers.RedisContainer
-import io.lettuce.core.RedisClient
 import io.mockk.spyk
 import kotlinx.coroutines.CoroutineDispatcher
+import kronos.mongo.MongoKronosStore
 import org.testcontainers.containers.MongoDBContainer
 import org.testcontainers.utility.DockerImageName
 import java.lang.Exception
@@ -47,12 +47,12 @@ object TestDataProvider {
     private lateinit var redisConnectionString: String
 
     fun initKronos(dispatcher: CoroutineDispatcher) {
-        Kronos.init(
+        val store = MongoKronosStore(
             mongoConnectionString = mongoConnectionString,
-            redisConnectionString = redisConnectionString,
-            dispatcher = dispatcher,
-            jobsDbName = "testJobsDb"
+            cache = RedisCacheClient(redisConnectionString),
+            jobsDbName = "testJobsDb",
         )
+        Kronos.init(store = store, dispatcher = dispatcher)
     }
 
     val sampleSpyJob = spyk<Job>(object : Job {

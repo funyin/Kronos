@@ -1,9 +1,7 @@
 package kronos
 
 import co.touchlab.kermit.Logger
-import com.mongodb.client.model.Filters
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.toList
 import kotlinx.datetime.*
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.DurationUnit
@@ -21,12 +19,8 @@ internal suspend fun Kronos.runner() {
 }
 
 internal suspend fun Kronos.handleJobs(currentInstant: Instant = Clock.System.now()) {
-
-    try{
-        val response = kacheController.getAll(collection = collection, serializer = KronoJob.serializer()) {
-            find(Filters.empty()).toList()
-        }
-
+    try {
+        val response = store.fetchDueJobs(currentInstant.toEpochMilliseconds())
         lastPingTime = Clock.System.now().toLocalDateTime(TimeZone.UTC)
         supervisorScope {
             for (kronoJob in response) {
@@ -35,9 +29,9 @@ internal suspend fun Kronos.handleJobs(currentInstant: Instant = Clock.System.no
                 }
             }
         }
-    }catch (e: Throwable){
-        onError?.invoke(e);
-        Logger.e("Runner error: ${e.message}",e)
+    } catch (e: Throwable) {
+        onError?.invoke(e)
+        Logger.e("Runner error: ${e.message}", e)
     }
 }
 

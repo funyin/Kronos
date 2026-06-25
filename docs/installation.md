@@ -4,85 +4,89 @@ comments: true
 
 # Installation
 
-Kronos is pushed to MavenCentral repository as kotlin multiplatform library.
+Kronos is split into a core framework and backend adapters. Choose a backend — the core is pulled in transitively. All artifacts are published to Maven Central.
 
-=== "Kotlin Gradle Script" 
-    
-    Add Maven Central repository:
+## Backend adapters
+
+=== "Kotlin Gradle Script"
 
     ```kotlin
-    repositories {
-        mavenCentral()
+    repositories { mavenCentral() }
+
+    dependencies {
+        // Pick one backend — the core kronos API is included automatically
+        implementation("com.funyinkash:kronos-mongo:$kronosVersion")
+        // or implementation("com.funyinkash:kronos-exposed:$kronosVersion")
     }
-    ```
-
-    Add dependencies:
-    
-    ```kotlin
-    implementation("com.funyinkash:kronos:$latest")
     ```
 
 === "Gradle"
-    
-    Add Maven Central repository:
-        
+
     ```groovy
-    repositories {
-        mavenCentral()
+    repositories { mavenCentral() }
+
+    dependencies {
+        implementation "com.funyinkash:kronos-mongo:$kronosVersion"
+        // or implementation "com.funyinkash:kronos-exposed:$kronosVersion"
     }
     ```
 
-    Add dependencies (you can also add other modules that you need):
-    
-    ```groovy
-    implementation 'com.funyinkash:kronos:$latest'
-    ```
-
-=== "Maven" 
-
-    Add Maven Central repository to section:
+=== "Maven"
 
     ```xml
-    
-    <repositories>
-        <repository>
-            <id>central</id>
-            <url>https://repo1.maven.org/maven2</url>
-        </repository>
-    </repositories>
-    ```
-    
-    Add dependency:
-    
-    ```xml
-    
     <dependency>
         <groupId>com.funyinkash</groupId>
-        <artifactId>kronos</artifactId>
-        <version>$latest</version>
+        <artifactId>kronos-mongo</artifactId>
+        <version>${kronosVersion}</version>
     </dependency>
     ```
 
-## Targets
-Specific dependencies. The Multiplatform dependency above should be sufficient, but these are also published 
+## Cache backend
 
-=== "jvm"
-    ```kotlin
-    implementation("com.funyinkash:kronos-jvm:$latest")
-    ```
-    
-=== "js"
-    
-    Comming soon
+`kronos-mongo` and `kronos-exposed` require a `CacheClient` from KacheController. Pick one:
 
-=== "android"
-    
-    Comming soon
+| Artifact | Use case |
+|---|---|
+| `kachecontroller-cache-redis` | Production |
+| `kachecontroller-cache-memory` | Local dev / tests |
 
-=== "linux"
-    
-    Comming soon
+```kotlin
+// Redis (production)
+implementation("com.funyinkash:kachecontroller-cache-redis:$kacheVersion")
 
-=== "ios"
-    
-    Comming soon
+// In-memory (dev / tests — no Redis needed)
+implementation("com.funyinkash:kachecontroller-cache-memory:$kacheVersion")
+```
+
+## Using with Maven
+
+```xml
+<dependencies>
+    <dependency>
+        <groupId>com.funyinkash</groupId>
+        <artifactId>kronos-mongo</artifactId>
+        <version>${kronosVersion}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.funyinkash</groupId>
+        <artifactId>kachecontroller-cache-redis</artifactId>
+        <version>${kacheVersion}</version>
+    </dependency>
+</dependencies>
+```
+
+## JVM target only
+
+Kronos currently targets **JVM only** (Java 19 toolchain). JS and Native targets are not yet available.
+
+## Architecture
+
+Kronos follows a pluggable-backend pattern:
+
+| Artifact | Role |
+|---|---|
+| `kronos` / `kronos-jvm` | Core framework — `Kronos` singleton, `KronosStore` interface, `Job` interface, scheduling, runner, execution |
+| `kronos-mongo` | MongoDB `KronosStore` implementation + convenience `Kronos.init(mongoUri, redisUri)` |
+| `kronos-exposed` | SQL `KronosStore` implementation via JetBrains Exposed + convenience `Kronos.init(dataSource, cache)` |
+
+The core types (`Kronos`, `Job`, `KronoJob`, etc.) are exposed transitively via `kronos-mongo` and `kronos-exposed` at `compile` scope. You only need to add the backend dependency. If you're implementing a custom `KronosStore`, depend on `kronos` directly.

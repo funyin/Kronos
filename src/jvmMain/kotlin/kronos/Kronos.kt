@@ -1,167 +1,118 @@
 package kronos
 
-import com.funyinkash.kachecontroller.KacheController
-import com.funyinkash.kachecontroller.Model
-import com.mongodb.client.model.Filters
-import com.mongodb.kotlin.client.coroutine.MongoClient
-import com.mongodb.kotlin.client.coroutine.MongoCollection
-import io.lettuce.core.ExperimentalLettuceCoroutinesApi
-import io.lettuce.core.RedisClient
-import io.lettuce.core.api.StatefulRedisConnection
-import io.lettuce.core.api.coroutines
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.toList
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import java.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.DurationUnit
 
-@Serializable
 object Kronos {
     internal val jobs: MutableMap<String, Job> = mutableMapOf()
-    internal lateinit var mongoClient: MongoClient
+    internal lateinit var store: KronosStore
 
-    internal val collection by lazy { mongoClient.getDatabase(jobsDbName).getCollection<KronoJob>("jobs") }
     private val exceptionHandler = CoroutineExceptionHandler { _, e ->
         onError?.invoke(e)
     }
     internal lateinit var coroutineScope: CoroutineScope
 
-    internal lateinit var redisConnection: StatefulRedisConnection<String, String>
-    lateinit var jobsDbName: String
-    var cacheExpiry: Duration? = null
     var onError: ((Throwable) -> Unit)? = null
     var lastPingTime: LocalDateTime? = null
         internal set
 
-    internal val mongoClientInitialized
-        get() = ::mongoClient.isInitialized
     internal val coroutineScopeInitialized
         get() = ::coroutineScope.isInitialized
-    internal val redisConnectionInitialized
-        get() = ::redisConnection.isInitialized
-
-    @OptIn(ExperimentalLettuceCoroutinesApi::class)
-    internal val kacheController: KacheController by lazy {
-        val client = redisConnection.coroutines()
-        KacheController(client = client)
-    }
+    internal val storeInitialized
+        get() = ::store.isInitialized
 
     /**
-     * @throws IllegalStateException on attempting to initialize a second time
+     * Initialize Kronos with a backend store. Call once at application startup.
+     *
+     * For MongoDB + Redis, use the `Kronos.init(mongoConnectionString, redisConnectionString)`
+     * convenience extension from the `kronos-mongo` artifact instead.
+     *
+     * @throws IllegalStateException if called more than once without [shutDown] in between.
      */
     fun init(
-        mongoConnectionString: String,
-        redisConnectionString: String,
+        store: KronosStore,
         dispatcher: CoroutineDispatcher = Dispatchers.IO,
-        jobsDbName: String = "jobsDb",
-        cacheExpiry: Duration? = null,
-
-        ): Kronos {
+    ): Kronos {
         if (this::coroutineScope.isInitialized) throw IllegalStateException("Kronos already initialized")
 
-
-        this.jobsDbName = jobsDbName
-        this.mongoClient = MongoClient.create(mongoConnectionString)
-        this.redisConnection = RedisClient.create(redisConnectionString).connect()
+        this.store = store
         coroutineScope = CoroutineScope(dispatcher + exceptionHandler)
-        this.cacheExpiry = cacheExpiry
-        this.onError = onError
-        //runner is not started for test dispatchers
-        //so I can control the curren time passed to the runner
-        if (dispatcher in listOf(Dispatchers.IO, Dispatchers.Main, Dispatchers.Unconfined, Dispatchers.Default)) {
-            coroutineScope.launch {
+
+        coroutineScope.launch {
+            store.initialize()
+            //runner is not started for test dispatchers
+            //so I can control the current time passed to the runner
+            if (dispatcher in listOf(Dispatchers.IO, Dispatchers.Main, Dispatchers.Unconfined, Dispatchers.Default)) {
                 runner()
             }
         }
         return this
     }
 
-    fun onError(listener: (e: Throwable) -> Unit) {
-        this.onError = listener
-    }
-
     internal fun shutDown() {
-        val unsetField: (String) -> Unit = {
-            javaClass.getDeclaredField(it).apply {
-                isAccessible = false
-                set(this@Kronos, null)
-            }
-        }
-
         coroutineScope.cancel()
-        unsetField(::coroutineScope.name)
-        unsetField(::redisConnection.name)
-        unsetField(::mongoClient.name)
+        store.close()
+        javaClass.getDeclaredField("coroutineScope").apply {
+            isAccessible = true
+            set(this@Kronos, null)
+        }
+        javaClass.getDeclaredField("store").apply {
+            isAccessible = true
+            set(this@Kronos, null)
+        }
         jobs.clear()
     }
 
+    /**
+     * Register a [Job] implementation. Must be called before scheduling jobs with this name.
+     * Registration is in-memory — call this on every application startup.
+     *
+     * @throws IllegalStateException if a job with the same [Job.name] is already registered.
+     */
     fun register(job: Job) {
         if (jobs.containsKey(job.name)) throw IllegalStateException("Job with name: '${job.name}' already registered")
         jobs[job.name] = job
     }
 
     /**
-     * Drop a job by the jobId
+     * Cancel and remove a single job by its ID. Triggers [Job.onDrop].
+     * Returns `true` if the job was found and deleted.
      */
     suspend fun dropJobId(id: String): Boolean {
-        return kacheController.remove(id, collection = collection) {
-            findOneAndDelete(Filters.eq("_id", id))?.let { job ->
-                val count = countDocuments(Filters.eq(KronoJob::jobName.name, job.jobName))
-                jobs[job.jobName]?.onDrop(id, lastJob = count == 0L)
-                true
-            } ?: false
-        }
+        val deleted = store.delete(id) ?: return false
+        val count = store.countByName(deleted.jobName)
+        jobs[deleted.jobName]?.onDrop(id, lastJob = count == 0L)
+        return true
     }
 
     /**
-     * Drop all jobs by [Job.name]
+     * Cancel and remove all scheduled jobs with the given [name]. Triggers [Job.onDrop] for each.
+     * Returns `true` if the delete was acknowledged.
      */
     suspend fun dropJob(name: String): Boolean {
-        val kronoJobs = kacheController.getAll(
-            collection, serializer = KronoJob.serializer(), expire = cacheExpiry
-        ) {
-            collection.find(Filters.eq(KronoJob::jobName.name, name)).toList()
-        }
-        return kacheController.removeAll(collection = collection) {
-            deleteMany(Filters.eq(KronoJob::jobName.name, name)).wasAcknowledged()
-        }.takeIf { it }?.let {
+        val kronoJobs = store.findByName(name)
+        return if (store.deleteByName(name)) {
             kronoJobs.forEachIndexed { index, kronoJob ->
                 jobs[name]?.onDrop(kronoJob.id, lastJob = index == kronoJobs.lastIndex)
             }
             true
-        } ?: false
+        } else false
     }
 
-    suspend fun dropAll(): Boolean {
-        for (job in jobs) {
-            dropJob(job.key)
-        }
-        return kacheController.getAll(collection, KronoJob.serializer(), expire = cacheExpiry) {
-            collection.find().toList()
-        }.isEmpty()
-    }
+    suspend fun dropAll(): Boolean = jobs.keys.all { name -> dropJob(name) }
 
     internal suspend fun addJob(kronoJob: KronoJob): String? {
-        val job = kacheController.set(collection, serializer = KronoJob.serializer()) {
-            if (insertOne(kronoJob).wasAcknowledged()) kronoJob
-            else null
-        }
-        return job?.id?.also {
-            //Checks if the Job is valid to be executed a current time.
-            //This solves the problem of scheduling an instant job inside a kronos window
-            //i.e within the same minute
+        val job = store.insert(kronoJob)
+        return job?.id?.also { _ ->
             val now = Clock.System.now()
             val currentMinute = now.toEpochMilliseconds().milliseconds.toLong(DurationUnit.MINUTES)
-            lastPingTime?.let {
-                if (kronoJob.startTime.milliseconds.inWholeMinutes == currentMinute/* && now.toLocalDateTime(TimeZone.UTC) > it*/) coroutineScope.launch {
-                    handleJob(job)
-                }
+            if (lastPingTime != null && kronoJob.startTime.milliseconds.inWholeMinutes == currentMinute) {
+                coroutineScope.launch { handleJob(job) }
             }
         }
     }
@@ -171,9 +122,7 @@ object Kronos {
      * @return A json string of the job
      */
     suspend fun checkJob(jobId: String): String? {
-        return kacheController.get(id = jobId, collection, serializer = KronoJob.serializer(), cacheExpiry) {
-            find(Filters.eq("_id", jobId)).firstOrNull()
-        }?.let {
+        return store.findById(jobId)?.let {
             Json.encodeToString(it)
         }
     }
@@ -182,25 +131,13 @@ object Kronos {
      * Returns all scheduled Jobs
      */
     suspend fun allJobs(): List<KronoJob> {
-        return kacheController.getAll(
-            collection, serializer = KronoJob.serializer(), expire = cacheExpiry
-        ) {
-            find().toList()
-        }
+        return store.findAll()
     }
 
     /**
      * Returns all scheduled Jobs with jobName
      */
     suspend fun allJobs(name: String): List<KronoJob> {
-        return kacheController.getAll(
-            collection, serializer = KronoJob.serializer(), expire = cacheExpiry
-        ) {
-            find(Filters.eq(KronoJob::jobName.name, name)).toList()
-        }.filter { it.jobName == name }
+        return store.findByName(name)
     }
-
-//    private fun jobNameCacheKey(name: String) = "${collection.cacheKey()}:$name"
-
-    private fun <T : Model> MongoCollection<T>.cacheKey() = "${namespace.databaseName}:${namespace.collectionName}"
 }

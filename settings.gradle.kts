@@ -11,3 +11,5 @@ plugins {
 }
 
 rootProject.name = "Kronos"
+include(":kronos-mongo")
+include(":kronos-exposed")

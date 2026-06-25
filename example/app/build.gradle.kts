@@ -14,8 +14,9 @@ repositories {
 }
 
 dependencies {
-//    implementation("com.funyinkash:kronos:0.0.3")
-    implementation(project(":kronos"))
+//    implementation(project(":kronos"))
+//    implementation(project(":kronos-mongo"))
+    implementation("com.funyinkash:kronos-mongo:0.0.8")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:5.9.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -25,7 +26,7 @@ dependencies {
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(19))
     }
 }
 

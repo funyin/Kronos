@@ -8,14 +8,16 @@ plugins {
 }
 
 group = "com.funyinkash"
-version = "0.0.7-SNAPSHOT"
+version = "0.0.8"
+
+allprojects {
+    group = rootProject.group
+    version = rootProject.version as String
+}
 
 repositories {
     mavenCentral()
-    maven {
-        url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-    }
-//    mavenLocal()
+    mavenLocal()
 }
 
 
@@ -29,7 +31,7 @@ kotlin {
         testRuns.named("test") {
             executionTask.configure {
                 useJUnitPlatform()
-                setJvmArgs(listOf("-XX:-OmitStackTraceInFastThrow"))
+                setJvmArgs(listOf("-XX:-OmitStackTraceInFastThrow", "-Xmx2g"))
             }
         }
     }
@@ -70,15 +72,15 @@ kotlin {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
-                implementation("com.funyinkash.kachecontroller:mongo-redis:1.0.2-SNAPSHOT")
-                implementation("org.mongodb:mongodb-driver-kotlin-coroutine:4.11.1")
-                implementation("org.mongodb:bson-kotlinx:4.11.1")
-                implementation("io.lettuce:lettuce-core:6.3.0.RELEASE")
+                implementation("com.funyinkash:kachecontroller-core:1.0.6")
                 implementation("co.touchlab:kermit:2.0.4")
             }
         }
         val jvmTest by getting {
             dependencies {
+                implementation(project(":kronos-mongo"))
+//                implementation("com.funyinkash:kachecontroller-cache-redis:1.0.6")
+
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
 
@@ -97,28 +99,13 @@ kotlin {
     }
 }
 
-koverReport {
-    verify {
-        rule("Min Coverage") {
-            bound {
-                minValue = 85
-            }
-        }
-    }
+val javaDocJar by tasks.registering(Jar::class) {
+    dependsOn(tasks.dokkaHtml)
+    archiveClassifier.set("javadoc")
+    from("$buildDir/dokka/html")
 }
 
-
-
 publishing {
-
-    val javaDocJar = tasks.register<Jar>("javadocJar") {
-        dependsOn(tasks.dokkaHtml)
-        archiveClassifier.set("javadoc")
-        from("$buildDir/dokka/html")
-    }
-
-
-
     publications {
         withType<MavenPublication> {
             val target = this.name
@@ -128,8 +115,6 @@ publishing {
             } else {
                 artifactId = "kronos-$target"
                 artifact(javaDocJar)
-//                from(components["java"])
-//                artifact(tasks.sourcesJar)
             }
 
             pom {
@@ -193,3 +178,14 @@ signing {
         sign(it)
     }
 }
+
+koverReport {
+    verify {
+        rule("Min Coverage") {
+            bound {
+                minValue = 85
+            }
+        }
+    }
+}
+

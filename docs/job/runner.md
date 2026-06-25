@@ -2,27 +2,36 @@
 comments: true
 ---
 
-The Runner is responsible for managing the validation and execution of jobs after they have been scheduled.
+# Runner
 
-There are a few edge cases that you can cater for by directing the runner on what to do in those cases
+The runner is a background coroutine that ticks every minute, fetches jobs that are due, and dispatches them for execution.
 
-1. What happens when the runner comes across a job that was scheduled to be executed in the past but did not get
-   executed e.g The server
-   was down at the time
-2. What happens when multiple instances of kronos(microservices) are trying to run jobs. Although this is not
-   recommended, you should delegate this a single service
+## OvershotAction
 
-## 1. OverShot Action
+When Kronos finds a job whose scheduled time has already passed (e.g. after a server restart), `OvershotAction` controls what happens:
 
-How you want Kronos to handle a Job when it is over due is termed `OvershotAction`.
+| Value | Behaviour |
+|---|---|
+| `Drop` | Job is deleted immediately. **(default)** |
+| `Fire` | Job runs immediately, ignoring the missed window. |
+| `Nothing` | Job is left in the database untouched. Avoid this — stale jobs accumulate. |
 
-There are three Options:
+```kotlin
+Kronos.schedule(
+    jobName = "my-job",
+    params = emptyMap(),
+    overshotAction = OvershotAction.Fire
+)
+```
 
-- **Fire** :  The Job is Run immediately without any validation
-- **Drop** :  The Job is dropped immediately
-- **Nothing** : No things happens. This is not recommended because it can bloat your db if not handled properly
+## Distributed Locking
 
-## 2. Locks
+Each job record holds a `locks` counter. When an instance begins executing a job, it increments the counter atomically. The runner only dispatches jobs where `locks == 0`, so a job already being processed by one instance is skipped by others.
 
-This is just a failsafe to prevent multiple instances of kronos(in the case of microservices) from running the same job.
-Once execution on a job starts, the job is locked and prevents other instances from running it
+This is a best-effort guard. For strict once-only guarantees in high-concurrency environments, make your `execute` implementation idempotent.
+
+## Timing
+
+- The runner ticks every **60 seconds**.
+- A job scheduled for "now" may wait up to 60 seconds before its first tick, unless it was scheduled within the current minute window (in which case Kronos fires it eagerly on insertion).
+- Minimum scheduling resolution is **1 minute**.

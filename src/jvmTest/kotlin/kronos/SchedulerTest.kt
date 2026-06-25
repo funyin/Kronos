@@ -1,8 +1,6 @@
 package kronos
 
 
-import com.funyinkash.kachecontroller.KacheController
-import com.mongodb.kotlin.client.coroutine.MongoCollection
 import io.mockk.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -15,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach
 import java.time.Month
 import kotlin.coroutines.CoroutineContext
 import kotlin.test.Test
+import kotlin.test.assertFails
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
@@ -382,21 +381,132 @@ class SchedulerTest {
         }
     }
 
+    // ── Periodic validation ────────────────────────────────────────────────
+
+    @Test
+    fun `everyWeek uses the supplied dayOfWeek not hardcoded Monday`() {
+        val tuesday = Periodic.everyWeek(dayOfWeek = 2, hour = 10, minute = 0)
+        val friday  = Periodic.everyWeek(dayOfWeek = 5, hour = 10, minute = 0)
+        assert(tuesday.dayOfWeek?.isoDayNumber == 2) {
+            "Expected Tuesday (2) but got ${tuesday.dayOfWeek?.isoDayNumber}"
+        }
+        assert(friday.dayOfWeek?.isoDayNumber == 5) {
+            "Expected Friday (5) but got ${friday.dayOfWeek?.isoDayNumber}"
+        }
+    }
+
+    @Test
+    fun `everyWeek rejects dayOfWeek 0 and 8`() {
+        assertFails { Periodic.everyWeek(dayOfWeek = 0, hour = 0, minute = 0) }
+        assertFails { Periodic.everyWeek(dayOfWeek = 8, hour = 0, minute = 0) }
+    }
+
+    @Test
+    fun `everyYear rejects month 0 and 13`() {
+        assertFails { Periodic.everyYear(month = 0, dayOfMonth = 1, hour = 0, minute = 0) }
+        assertFails { Periodic.everyYear(month = 13, dayOfMonth = 1, hour = 0, minute = 0) }
+    }
+
+    @Test
+    fun `everyMonth rejects dayOfMonth 0 and 32`() {
+        assertFails { Periodic.everyMonth(dayOfMonth = 0, hour = 0, minute = 0) }
+        assertFails { Periodic.everyMonth(dayOfMonth = 32, hour = 0, minute = 0) }
+    }
+
+    @Test
+    fun `everyHour rejects minute 60 and negative`() {
+        assertFails { Periodic.everyHour(minute = 60) }
+        assertFails { Periodic.everyHour(minute = -1) }
+    }
+
+    @Test
+    fun `everyDay rejects hour 24 and negative`() {
+        assertFails { Periodic.everyDay(hour = 24, minute = 0) }
+        assertFails { Periodic.everyDay(hour = -1, minute = 0) }
+    }
+
+    // ── Scheduling correctness ─────────────────────────────────────────────
+
+    @Test
+    fun `every week fires on the correct day of week`() = runTest(timeout = 20.seconds) {
+        // Jan 1 2024 = Monday. We target Friday (day 5).
+        // In a 10-day window (Jan 1–10) there is exactly 1 Friday (Jan 5).
+        // With the old hardcoded-Monday bug there would be 2 Mondays (Jan 1 + Jan 8),
+        // so `exactly = 1` would fail, catching the regression.
+        val currentTime = LocalDateTime(
+            date = LocalDate(year = 2024, month = kotlinx.datetime.Month.JANUARY, dayOfMonth = 1),
+            time = LocalTime.fromSecondOfDay(1)
+        ).toInstant(TimeZone.UTC)
+
+        val targetDayOfWeek = 5 // Friday
+        val kronoJob = spyk<KronoJob>(
+            KronoJob(
+                jobName = TestDataProvider.sampleSpyJob.name,
+                startTime = currentTime.plus(1L.toDuration(DurationUnit.MINUTES)).toEpochMilliseconds(),
+                params = emptyMap(),
+                periodic = Periodic.everyWeek(dayOfWeek = targetDayOfWeek, hour = 5, minute = 5),
+                overshotAction = OvershotAction.Drop
+            )
+        )
+
+        extraMocks(kronoJob, TestDataProvider.sampleSpyJob)
+        val minutesInTenDays = 10.toDuration(DurationUnit.DAYS).toLong(DurationUnit.MINUTES)
+        (1..minutesInTenDays).forEach {
+            val timeAtMinute = currentTime.plus(it.minutes)
+            val ldt = timeAtMinute.toLocalDateTime(TimeZone.UTC)
+            if (ldt.hour == 5 && ldt.minute == 5) {
+                Kronos.handleJobs(timeAtMinute)
+                runCurrent()
+            }
+        }
+
+        // Exactly one Friday (Jan 5) in the 10-day range
+        coVerify(exactly = 1) { TestDataProvider.sampleSpyJob.execute(any(), any()) }
+    }
+
+    @Test
+    fun `job at maxCycles executes but does not reschedule`() = runTest(timeout = 20.seconds) {
+        val maxCycles = 3
+        val startTime = Clock.System.now()
+        // cycleNumber == maxCycles means this is the last permitted cycle
+        val kronoJob = spyk<KronoJob>(
+            KronoJob(
+                jobName = TestDataProvider.sampleSpyJob.name,
+                startTime = startTime.toEpochMilliseconds(),
+                params = mapOf("cycleNumber" to "$maxCycles"),
+                periodic = Periodic.everyMinute(),
+                maxCycles = maxCycles,
+                overshotAction = OvershotAction.Drop
+            )
+        )
+
+        val rescheduledJobs = mutableListOf<KronoJob>()
+        extraMocks(kronoJob, TestDataProvider.sampleSpyJob)
+        coEvery { Kronos.addJob(capture(rescheduledJobs)) } returns ""
+
+        Kronos.handleJobs(startTime.plus(1.minutes))
+        runCurrent()
+
+        // Job still executes on its last cycle
+        coVerify(exactly = 1) { TestDataProvider.sampleSpyJob.execute(any(), any()) }
+        // But no new job is inserted
+        assert(rescheduledJobs.isEmpty()) { "Expected no reschedule on last cycle but addJob was called with: $rescheduledJobs" }
+    }
+
     private fun TestScope.extraMocks(kronoJob: KronoJob, sampleJob: Job) {
         mockkObject(Kronos)
-        every { Kronos.init(any(), any(),any(),any(),any()) } returns Kronos
+        every { Kronos.init(any<KronosStore>(), any()) } returns Kronos
         every { Kronos.coroutineScope.isActive } returns isActive
 
-        val mockkDb = mockk<MongoCollection<KronoJob>>()
-        every { mockkDb.namespace.databaseName } returns "mockk"
-        every { Kronos.collection } returns mockkDb
-        val kacheController = mockk<KacheController> {
-            coEvery { getAll<KronoJob>(any(), any(), any(), any(),any()) } returns listOf(kronoJob)
-            coEvery { set<KronoJob>(any(), any(), any(),any(),any()) } returns kronoJob
-            coEvery { remove<KronoJob>(any(), any(), any()) } returns true
+        val mockStore = mockk<KronosStore> {
+            coEvery { insert(any()) } returns kronoJob
+            coEvery { fetchDueJobs(any()) } returns listOf(kronoJob)
+            coEvery { acquireLock(any()) } returns kronoJob
+            coEvery { delete(any()) } returns kronoJob
+            coEvery { deleteByName(any()) } returns true
+            coEvery { countByName(any()) } returns 0L
         }
-        every { kacheController["cacheKey"](any<MongoCollection<KronoJob>>()) } returns ""
-        every { Kronos.kacheController } returns kacheController
+        every { Kronos.store } returns mockStore
         every { Kronos.coroutineScope } returns CoroutineScope(StandardTestDispatcher(testScheduler) as CoroutineContext)
         every { Kronos.jobs.get(any()) } returns sampleJob
         every { Kronos.jobs } returns mutableMapOf(sampleJob.name to sampleJob)

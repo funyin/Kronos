@@ -33,10 +33,8 @@ interface Job {
     }
 
     /**
-     * call back for failure during retries
-     * @param retryCount the number of retries this will go from 1 -> ([Job.retries])
-     * That is because the firs call back [retryCount] will be 0 because the number of retries is 0
-     * @param cycleNumber this would be greater than 1 for a repeated job [Job.retries]
+     * Called after each individual retry attempt fails. [retryCount] goes from 1 to [retries].
+     * [onFail] is called once all retries are exhausted.
      */
     fun onRetryFail(retryCount: Int, cycleNumber: Int, params: Map<String, Any>, exception: Exception?) {
         println("KRONOJOB($name) RetryFail: ")
@@ -48,8 +46,7 @@ interface Job {
     }
 
     /**
-     * call back for failure after retries
-     * @param cycleNumber this would be greater than 1 for a repeated job [Job.retries]
+     * Called once after all retries are exhausted and the job has still not succeeded.
      */
     fun onFail(cycleNumber: Int, params: Map<String, Any>, exception: Exception?) {
         println("KRONOJOB($name) Fail: ")
@@ -60,8 +57,7 @@ interface Job {
     }
 
     /**
-     * call back for when job is successful
-     * @param cycleNumber this would be greater than 1 for a repeated job [Job.retries]
+     * Called when [execute] returns `true`.
      */
     fun onSuccess(cycleNumber: Int, params: Map<String, Any>) {
         println("KRONOJOB($name) Success: ")
@@ -72,28 +68,25 @@ interface Job {
     }
 
     /**
-     * Add your own validation that must return false for the job to run
-     * This is called after the job has passed Kronos validation
-     * If this returns [true] then the job will not run
+     * Custom pre-run gate called after Kronos's own validation. Return `true` to skip this cycle.
+     * Use this for runtime conditions (e.g. skip on public holidays) that can't be expressed in the schedule.
      */
     fun challengeRun(cycleNumber: Int, params: Map<String, Any>): Boolean = false
 
     /**
-     * Another job has been loaded for a particular schedule. at this point your original job
-     * might still be in execution but the nex job has already been scheduled eagerly.
-     * This will only happen for periodic jobs or jobs with intervals
+     * Called when the next occurrence of a repeating job has been inserted into the database.
+     * Useful for tracking the current job ID when you hold a reference to it.
      */
     fun periodicJobLoaded(originJobId: String, nextJobId: String) {}
 
     /**
-     * A Job has executed and has been dropped from the db
-     *
-     * @param lastJob will be true if this is the last job
+     * Called each time a job record is removed from the database.
+     * [lastJob] is `true` when no further jobs with this name remain.
      */
     fun onDrop(jobId: String, lastJob: Boolean) {}
 
     /**
-     * Call back for when the last cycle of a job has been reached and the job has been dropped
+     * Called when the final cycle of a bounded job (`maxCycles` or `endTime`) completes and the job is dropped.
      */
     fun onLasCycleDrop(jobId: String, params: Map<String, Any>) {}
 }

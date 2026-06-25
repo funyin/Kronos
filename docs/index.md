@@ -1,66 +1,74 @@
-# Overview
+# Kronos
 
-Welcome to Kronos. The persistent job scheduling library for kotlin multiplatform.
+A persistent, distributed job scheduler for Kotlin JVM — without the
+complexity of cron expressions.
 
-### Summary
+Jobs run with minute-level precision, survive service restarts, and
+coordinate safely across multiple instances via a conditional atomic lock.
 
-```kotlin
-suspend fun main() {
-    //Initialize
+## At a glance
+
+=== "MongoDB + Redis"
+
+    ```kotlin
+    import kronos.mongo.init
+
     Kronos.init(
         mongoConnectionString = "mongodb://localhost:27017",
         redisConnectionString = "redis://localhost:6379"
     )
-    //Register a Job
-    Kronos.register(SayHello)
-    //Schedule a one time job
-    Kronos.schedule(
-        SayHello.name,/*say-hello*/
-        startTime = Instant.now().plusSeconds(60).toEpochMilli(),
-        params = mapOf(
-            "firsName" to "Funyin",
-            "lastName" to "Kash"
-        ),
+
+    Kronos.register(SendReport)
+
+    Kronos.schedule(jobName = SendReport.name, params = mapOf("id" to "123"))
+
+    Kronos.schedulePeriodic(
+        jobName = SendReport.name,
+        periodic = Periodic.everyDay(hour = 9, minute = 0),
+        params = mapOf("id" to "123")
     )
+    ```
 
-    //Schedule a periodic job an get back the jobId
-    val jobId = Kronos.schedulePeriodic(
-        jobName = SayHello.name,
-        /*say-hello*/
-//        startTime = Instant.now().plusSeconds(60).toEpochMilli(),
-        periodic = Periodic.everyMinute(),
-//        periodic = Periodic.everyHour(minute = 5),
-//        periodic = Periodic.everyWeek(dayOfWeek = 7, hour = 4, minute = 2),
-//        periodic = Periodic.everyMonth(dayOfMonth = 12, hour = 4, minute = 2),
-//        periodic = Periodic.everyYear(month = 1, dayOfMonth = 7, hour = 4, minute = 2),
-        params = mapOf(
-            "firsName" to "Funyin",
-            "lastName" to "Kash"
-        ),
+=== "PostgreSQL + Redis"
+
+    ```kotlin
+    import kronos.exposed.init
+
+    Kronos.init(
+        dataSource = ds,
+        cache = RedisCacheClient("redis://localhost:6379")
     )
+    ```
 
-    //Drop Job By Id
-    jobId?.let { Kronos.dropJobId(it) }
-    //Drop Job By Name
-    jobId?.let { Kronos.dropJob(SayHello.name) }
+=== "Sqlite + In-Memory Cache"
 
-    Kronos.dropAll()
+    ```kotlin
+    import kronos.exposed.init
+    import com.funyinkash.kachecontroller.cache.InMemoryCacheClient
+    import org.sqlite.SQLiteDataSource
 
-    delay(1000 * 60 * 7)
-}
-
-object SayHello : Job {
-    override val name: String
-        get() = "say-hello"
-
-    override val retries: Int
-        get() = 2
-
-    override suspend fun execute(cycleNumber: Int, params: Map<String, Any>): Boolean {
-        super.execute(cycleNumber, params)
-        println("Hello ${params["firsName"]} ${params["lastName"]} $cycleNumber")
-        return true
+    val ds = SQLiteDataSource().apply {
+        url = "jdbc:sqlite:kronos.db"
     }
 
-}
-```
+    Kronos.init(
+        dataSource = ds,
+        cache = InMemoryCacheClient()
+    )
+    ```
+
+=== "PostgreSQL + In-Memory Cache"
+
+    ```kotlin
+    import kronos.exposed.init
+    import com.funyinkash.kachecontroller.cache.InMemoryCacheClient
+
+    val ds = HikariDataSource().apply { /* ... */ }
+
+    Kronos.init(
+        dataSource = ds,
+        cache = InMemoryCacheClient()
+    )
+    ```
+
+See [Quick Start](quick_start.md) to get running in minutes.

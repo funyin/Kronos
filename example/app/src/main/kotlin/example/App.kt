@@ -3,6 +3,7 @@ package example
 
 import kotlinx.coroutines.delay
 import kronos.*
+import kronos.mongo.init
 import kotlin.time.Duration.Companion.minutes
 
 suspend fun main() {

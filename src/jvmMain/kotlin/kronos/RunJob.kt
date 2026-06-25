@@ -1,7 +1,5 @@
 package kronos
 
-import com.mongodb.client.model.Filters
-import com.mongodb.client.model.Updates
 import kotlinx.datetime.Instant
 import kotlin.time.Duration
 
@@ -26,9 +24,7 @@ internal suspend fun Kronos.runJob(
         if (job.challengeRun(cycleNumber, jobParams))
             return@let
 
-        kacheController.set(collection, serializer = KronoJob.serializer()) {
-            findOneAndUpdate(Filters.eq("_id", kronoJob.id), Updates.inc(KronoJob::locks.name, 1))
-        }
+        store.acquireLock(kronoJob.id) ?: return@let
 
         val underEndTime =
             kronoJob.endTime?.let {
@@ -51,7 +47,7 @@ internal suspend fun Kronos.runJob(
                     startTime = if (kronoJob.periodic != null)
                         nextPeriodicTime(kronoJob.startTime, kronoJob.periodic)
                     else
-                        delayToStartTime(delay = delay),
+                        currentInstant.plus(delay).toEpochMilliseconds(),
                     interval = kronoJob.interval,
                     endTime = kronoJob.endTime,
                     params = params,
@@ -90,8 +86,6 @@ internal suspend fun Kronos.runJob(
         var success = execute()
         var retries = kronoJob.retries
         if (!success) {
-            jobParams["retryCount"] = 0.toString()
-            job.onFail(cycleNumber = cycleNumber, jobParams, exception)
             while (!success && retries > 0) {
                 retries--
                 val retryCount = kronoJob.retries - retries
@@ -105,6 +99,8 @@ internal suspend fun Kronos.runJob(
                         exception = exception
                     )
             }
+            if (!success)
+                job.onFail(cycleNumber = cycleNumber, jobParams, exception)
         }
         if (success)
             job.onSuccess(cycleNumber = cycleNumber, jobParams)
@@ -116,5 +112,5 @@ internal suspend fun Kronos.runJob(
                     job.onLasCycleDrop(kronoJob.id, jobParams)
             }
 
-    } ?: IllegalStateException("Job with name '${kronoJob.jobName}' is not registered")
+    } ?: throw IllegalStateException("Job with name '${kronoJob.jobName}' is not registered")
 }

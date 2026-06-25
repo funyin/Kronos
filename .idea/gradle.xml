@@ -9,6 +9,8 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/kronos-exposed" />
+            <option value="$PROJECT_DIR$/kronos-mongo" />
           </set>
         </option>
       </GradleProjectSettings>
@@ -17,7 +19,6 @@
         <option name="gradleJvm" value="corretto-19" />
         <option name="modules">
           <set>
-            <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/example" />
             <option value="$PROJECT_DIR$/example/app" />
           </set>

@@ -2,122 +2,97 @@
 comments: true
 ---
 
----
-description: "Jobs" 
----
-
 # Job
 
-Jobs are responsible for running and managing tasks. After tasks are scheduled, they are associated with a **Job** by
-the name and executed within the Job.
+A `Job` defines the logic and callbacks for a scheduled task. Each `Job` has a unique name that links it to its scheduled entries in the database.
 
-## Creating a Job
-
-To Create a Job you simply Extend the **Job** Object
+## Defining a Job
 
 ```kotlin
-object SayHello : Job {
-    override val name: String
-        get() = "say-hello"
+object SendReport : Job {
+    override val name = "send-report"
+    override val retries = 2  // retry up to 2 times on failure
 
     override suspend fun execute(cycleNumber: Int, params: Map<String, Any>): Boolean {
-        super.execute(cycleNumber, params)
-        println("Hello ${params["firsName"]} ${params["lastName"]} $cycleNumber")
-        return true
-    }
-
-}
-```
-
-* The **cycleNumber** is the number of times the job has been executed from 1 -> n
-* The job also provides the **params** that were provided when the job was scheduled. You can serialize and deserialize objects through this
-* The execution should return `true` to indicate that the job was successful.
-
-## Executing Job
-
-### Success
-Callback for when the job is successful i.e `execute` returns true
-```kotlin
-object SayHello : Job {
-
-    fun onSuccess(cycleNumber: Int, params: Map<String, Any>) {
-        println("KRONOJOB($name) Success: ")
-        println("cycle-> $cycleNumber")
-        println("params-> $params")
-        println("time-> ${LocalDateTime.now()}")
-        println()
-    }
-
-}
-```
-
-### Failure
-Callback for when the job is fails i.e `execute` returns false.
-This is only called for the first failure. 
-If it fails again then `onRetryFail` is called
-```kotlin
-object SayHello : Job {
-
-    fun onFail(cycleNumber: Int, params: Map<String, Any>) {
-        
-    }
-
-}
-```
-
-### Retries
-In the case that `false` is returned(i.e task failed) you have the opportunity to set a number of retries with
-
-```kotlin
-object SayHello : Job {
-    ...
-
-    override val retries: Int
-        get() = 2
-    ...
-}
-```
-
-This will rerun the execution without any delay for the specified number of retries until the execution returns true.
-This call back is also provided for each failure
-
-```kotlin
-object SayHello : Job {
-
-    fun onRetryFail(retryCount: Int, cycleNumber: Int, params: Map<String, Any>) {
-        
+        val reportId = params["reportId"] as String
+        // do work...
+        return true  // return false to signal failure and trigger retry
     }
 }
 ```
 
-## Challenge Execution
-If the Job has passed the internal execution by kronos and is about to run, 
-you can prevent it from running by adding your own validation. e.g
-A Job that runs every day, but you don't want the Job to run if it is a public holiday.
+- `cycleNumber` starts at 1 and increments for each repeated execution.
+- `params` contains the values passed at scheduling time, plus `"cycleNumber"` (injected automatically).
+- Return `true` for success, `false` to trigger retries.
 
-The Job will not run if `challengeRun` returns true
+## Callbacks
+
+All callbacks have default no-op implementations.
+
+### `onSuccess`
+Called when `execute` returns `true`.
+```kotlin
+override fun onSuccess(cycleNumber: Int, params: Map<String, Any>) { }
+```
+
+### `onFail`
+Called once after **all retries are exhausted** and the job has still not succeeded.
+```kotlin
+override fun onFail(cycleNumber: Int, params: Map<String, Any>, exception: Exception?) { }
+```
+
+### `onRetryFail`
+Called after each individual retry attempt fails (before the final `onFail`).
+`retryCount` goes from 1 up to `Job.retries`.
+```kotlin
+override fun onRetryFail(retryCount: Int, cycleNumber: Int, params: Map<String, Any>, exception: Exception?) { }
+```
+
+### `onDrop`
+Called each time a job record is removed from the database (after execution, or after `dropJobId`).
+`lastJob` is `true` when this was the last remaining job of this name.
+```kotlin
+override fun onDrop(jobId: String, lastJob: Boolean) { }
+```
+
+### `onLasCycleDrop`
+Called when the **final** cycle of a bounded job (`maxCycles` or `endTime`) is reached and the job is dropped.
+```kotlin
+override fun onLasCycleDrop(jobId: String, params: Map<String, Any>) { }
+```
+
+### `periodicJobLoaded`
+Called when the next occurrence of a repeating job is inserted into the database (eagerly, before the current cycle finishes). Use this to track the latest job ID if needed.
+```kotlin
+override fun periodicJobLoaded(originJobId: String, nextJobId: String) { }
+```
+
+## Retries
+
+Set `retries` to automatically retry a failed execution:
 
 ```kotlin
-object SayHello : Job {
-
-    //This Job will not run if the cycle is an even number
-    fun challengeRun(cycleNumber: Int, params: Map<String, Any>): Boolean {
-        return cycleNumber % 2 == 0
-    }
+object SendReport : Job {
+    override val retries = 3  // try up to 3 additional times after the first failure
 }
 ```
 
-## Periodic Job Loaded
-This is called when the next job for a periodic job is scheduled.
-In case you are making use of the job Id when you scheduled the job, you can listen to this to update the Id 
-you are referencing
+Execution order on repeated failure:
+1. `execute()` → `false`
+2. `onRetryFail(retryCount = 1, ...)`
+3. `execute()` → `false`
+4. `onRetryFail(retryCount = 2, ...)`
+5. `execute()` → `false`
+6. `onFail(...)` ← called only after all retries are exhausted
+
+## Blocking Execution
+
+Override `challengeRun` to veto execution at runtime (after Kronos's own validation):
 
 ```kotlin
-object SayHello : Job {
-
-    //This Job will not run if the cycle is an even number
-    fun periodicJobLoaded(originJobId: String, nextJobId: String) {}
+override fun challengeRun(cycleNumber: Int, params: Map<String, Any>): Boolean {
+    return isPublicHoliday()  // return true to skip this cycle
 }
 ```
 
-
+The job is skipped for this tick if `challengeRun` returns `true`.

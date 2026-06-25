@@ -7,6 +7,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
@@ -50,8 +51,7 @@ class KronosTest {
         @Test
         fun `initialized necessary fields`() = runTest {
             assert(Kronos.coroutineScopeInitialized)
-            assert(Kronos.redisConnectionInitialized)
-            assert(Kronos.mongoClientInitialized)
+            assert(Kronos.storeInitialized)
         }
 
 
@@ -191,10 +191,30 @@ class KronosTest {
             registerSampleJob(spyJob)
             scheduleSampleJob()
             Kronos.handleJobs(Clock.System.now().plus(1.minutes))
-//            while (Kronos.coroutineScope.) {
-//
-//            }
             verify(atLeast = 1) { spyJob.onFail(any(), any(), any()) }
+        }
+
+        @Test
+        fun `onFail is called after retries are exhausted not before`() = runTest {
+            val callOrder = mutableListOf<String>()
+            val spyJob = spyk<Job>(sampleJob)
+            coEvery { spyJob.execute(any(), any()) } coAnswers {
+                callOrder += "execute"
+                false
+            }
+            every { spyJob.retries } returns 2
+            every { spyJob.onFail(any(), any(), any()) } answers { callOrder += "onFail" }
+            every { spyJob.onRetryFail(any(), any(), any(), any()) } answers { callOrder += "onRetryFail" }
+            registerSampleJob(spyJob)
+            scheduleSampleJob()
+            Kronos.handleJobs(Clock.System.now().plus(1.minutes))
+
+            // onFail must come after all retries, not before them
+            assert(callOrder.last() == "onFail") { "onFail should be last but got: $callOrder" }
+            assert(callOrder.count { it == "onRetryFail" } == 2) { "Expected 2 onRetryFail calls but got: $callOrder" }
+            assert(callOrder.indexOf("onFail") > callOrder.lastIndexOf("onRetryFail")) {
+                "onFail must come after last onRetryFail but got: $callOrder"
+            }
         }
 
         @Test
@@ -205,15 +225,55 @@ class KronosTest {
             registerSampleJob(spyJob)
             scheduleSampleJob()
             Kronos.handleJobs(Clock.System.now().plus(1.minutes))
-//            while (Kronos.coroutineScope.) {
-//
-//            }
             verify { spyJob.onFail(any(), any(), any()) }
             verify(exactly = 2) { spyJob.onRetryFail(any(), any(), any(), any()) }
         }
 
         @Test
-        fun `loadTest`() = runTest(timeout = 60.seconds) {
+        fun `onLasCycleDrop is not called when drop fails`() = runTest {
+            val spyJob = spyk<Job>(sampleJob)
+            coEvery { spyJob.execute(any(), any()) } coAnswers { true }
+            registerSampleJob(spyJob)
+            val jobId = scheduleSampleJob()!!
+
+            // Delete from DB manually so dropJob returns false
+            Kronos.dropJobId(jobId)
+
+            Kronos.handleJobs(Clock.System.now().plus(1.minutes))
+
+            // Job was already deleted so dropJob should return false -> onLasCycleDrop should NOT fire
+            verify(exactly = 0) { spyJob.onLasCycleDrop(any(), any()) }
+        }
+
+        @Test
+        fun `cycleNumber increments across repeated job cycles`() = runTest {
+            val observedCycles = mutableListOf<Int>()
+            val spyJob = spyk<Job>(sampleJob)
+            coEvery { spyJob.execute(any(), any()) } coAnswers {
+                val params = secondArg<Map<String, Any>>()
+                observedCycles += (params["cycleNumber"] as String).toInt()
+                true
+            }
+            registerSampleJob(spyJob)
+
+            val jobId = Kronos.schedule(
+                sampleJob.name,
+                startTime = Clock.System.now().toEpochMilliseconds(),
+                interval = 1.minutes,
+                maxCycles = 3,
+                params = emptyMap()
+            )!!
+
+            val base = Clock.System.now()
+            Kronos.handleJobs(base)
+            Kronos.handleJobs(base.plus(1.minutes))
+            Kronos.handleJobs(base.plus(2.minutes))
+
+            assertEquals(listOf(1, 2, 3), observedCycles)
+        }
+
+        @Test
+        fun loadTest() = runTest(timeout = 60.seconds) {
             val spyJob = spyk<Job>(sampleJob)
             coEvery { spyJob.execute(any(), any()) } coAnswers { true }
             every { spyJob.retries } returns 1
@@ -231,6 +291,7 @@ class KronosTest {
                     )
                 }
             }
+            advanceUntilIdle()
             Kronos.handleJobs(currentInstant)
             coVerify(exactly = jobCount) { spyJob.execute(any(), any()) }
         }

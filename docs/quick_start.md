@@ -2,52 +2,94 @@
 comments: true
 ---
 
-## Starting Kronos
+## 1. Initialize
 
-Kronos should be initialized once through the lifecycle of your application.
+Call `init` once at application startup. It throws `IllegalStateException` if called more than once.
 
 ```kotlin
-val mongoClient: MongoClient = MongoClient.create("mongodb://localhost:27017")
-val redisClient: RedisClient = RedisClient.create("redis://localhost:6379")
-val connection: StatefulRedisConnection<String, String> = redisClient.connect()
+import kronos.mongo.init  // extension from kronos-mongo
 
-Kronos.init(mongoClient = mongoClient, redisConnection = connection)
+Kronos.init(
+    mongoConnectionString = "mongodb://localhost:27017",
+    redisConnectionString = "redis://localhost:6379"
+)
 ```
-Throws IllegalState Exception on attempt to initialize a second time
 
-## Job
-Jobs are categories of tasks that are use to define execution.
+To handle errors from background job execution:
 
-### Define Job
 ```kotlin
-object SayHello : Job {
-    override val name: String
-        get() = "say-hello"
+Kronos.onError = { throwable -> logger.error("Kronos error", throwable) }
+```
+
+## 2. Define a Job
+
+Implement the `Job` interface. The `name` must be unique across all registered jobs.
+
+```kotlin
+object SendReport : Job {
+    override val name = "send-report"
+    override val retries = 2  // retry up to 2 times on failure
 
     override suspend fun execute(cycleNumber: Int, params: Map<String, Any>): Boolean {
-        super.execute(cycleNumber, params)
-        println("Hello ${params["firsName"]} ${params["lastName"]} $cycleNumber")
-        return true
+        val reportId = params["reportId"] as String
+        // do work...
+        return true  // false triggers a retry
     }
 }
 ```
 
-### Register Job
+## 3. Register
+
+Jobs must be registered before they can be scheduled. Registration is in-memory only — do it on every startup.
+
 ```kotlin
-Kronos.register(SayHello)
+Kronos.register(SendReport)
 ```
 
-## Schedule Job
-
-This Job will start in 1 minute and run once
+## 4. Schedule
 
 ```kotlin
+// One-time, runs immediately
 Kronos.schedule(
-        SayHello.name,
-        startTime = Instant.now().plusSeconds(60).toEpochMilli(),
-        params = mapOf(
-            "firsName" to "Funyin",
-            "lastName" to "Kash"
-        ),
-    )
+    jobName = SendReport.name,
+    params = mapOf("reportId" to "abc")
+)
+
+// One-time, delayed by 5 minutes
+Kronos.schedule(
+    jobName = SendReport.name,
+    delay = 5.minutes,
+    params = mapOf("reportId" to "abc")
+)
+
+// Repeating every 30 minutes, max 10 times
+Kronos.schedule(
+    jobName = SendReport.name,
+    interval = 30.minutes,
+    maxCycles = 10,
+    params = mapOf("reportId" to "abc")
+)
+
+// Periodic — every day at 09:00 UTC
+Kronos.schedulePeriodic(
+    jobName = SendReport.name,
+    periodic = Periodic.everyDay(hour = 9, minute = 0),
+    params = mapOf("reportId" to "abc")
+)
+```
+
+Both `schedule` and `schedulePeriodic` return the job ID (`String?`), or `null` if insertion failed.
+
+## 5. Manage
+
+```kotlin
+val jobId = Kronos.schedule(...)!!
+
+Kronos.checkJob(jobId)              // JSON of current job state, null if not found
+Kronos.allJobs()                    // all scheduled jobs
+Kronos.allJobs(SendReport.name)     // jobs filtered by name
+
+Kronos.dropJobId(jobId)             // cancel one specific job
+Kronos.dropJob(SendReport.name)     // cancel all jobs with this name
+Kronos.dropAll()                    // cancel everything
 ```

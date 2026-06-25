@@ -3,12 +3,34 @@ comments: true
 ---
 
 # Roadmap
-Here is an unordered list of features that I would like to see in kjob. If you consider one of them important please open an issue.
 
-- <s>InMemory Kronos</s> : Use [TestContainers](https://testcontainers.com/)
-    - Non-persistent in memory variant to serve as a replacement for tests 
-- Backoff retry algorithm for failed jobs
-    - An algorithm to control the retry delay between failed executions
-- Dashboard 
-    - A standalone self hosted application that can provide a ui(kobweb) to display, log and manage jobs. 
-    - Authentication will be handled by time based randomly updating values in the db. If you have access to those values(your db). Then you are authorized to access the UI
+Unordered list of planned and potential features. Open an issue if something
+here is important to you.
+
+## Completed
+
+- **Pluggable backends** — `KronosStore` interface decouples the scheduler
+  from MongoDB/Redis. Swap backends without changing application code.
+- **`kronos-mongo` adapter** — MongoDB + any `CacheClient` (Redis, SQLite,
+  in-memory).
+- **`kronos-exposed` adapter** — PostgreSQL / SQLite / H2 via Exposed ORM + any
+  `CacheClient`.
+- **Conditional distributed lock** — `acquireLock` now atomically
+  increments only when `locks == 0`, eliminating the TOCTOU gap.
+- **Optimized queries** — Indexed, filtered fetch replaces full collection
+  scans.
+- **Retry ordering fix** — `onFail` is correctly called after all retries
+  are exhausted, not before.
+- **acquireLock null-safety** — Lock failure aborts execution cleanly
+  (`?: return@let`).
+
+## Planned
+
+- **Backoff retry** — Configurable delay between retry attempts
+  (exponential or fixed).
+- **`InMemoryKronosStore`** — No-database store for unit tests; eliminates
+  Testcontainers dependency for scheduler logic tests.
+- **Dashboard** — Self-hosted UI (Kobweb) to view, log, and manage jobs.
+  Auth via time-rotating DB tokens.
+- **Micrometer / OpenTelemetry metrics** — Export tick duration, queue
+  depth, and execution counters.
