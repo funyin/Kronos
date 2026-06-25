@@ -80,7 +80,7 @@ kotlin {
         val jvmTest by getting {
             dependencies {
                 implementation(project(":kronos-mongo"))
-//                implementation("com.funyinkash:kachecontroller-cache-redis:1.0.6")
+                implementation("com.funyinkash:kachecontroller-cache-redis:1.0.6")
 
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
