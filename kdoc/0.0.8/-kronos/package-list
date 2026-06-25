@@ -1,0 +1,91 @@
+$dokka.format:html-v1
+$dokka.linkExtension:html
+$dokka.location:kronos////PointingToDeclaration/-kronos/kronos/index.html
+$dokka.location:kronos//handleJob/kronos.Kronos#kronos.KronoJob#[Error type: Unresolved type for Instant]/PointingToDeclaration/-kronos/kronos/handle-job.html
+$dokka.location:kronos//schedule/kronos.Kronos#kotlin.String#[Error type: Unresolved type for Duration]#[Error type: Unresolved type for Duration]?#kotlin.Long?#kotlin.Int?#kotlin.Int?#kotlin.collections.Map[kotlin.String,kotlin.String]#kronos.OvershotAction/PointingToDeclaration/-kronos/kronos/schedule.html
+$dokka.location:kronos//schedule/kronos.Kronos#kotlin.String#kotlin.Long#[Error type: Unresolved type for Duration]?#kotlin.Long?#kotlin.Int?#kotlin.Int?#kotlin.collections.Map[kotlin.String,kotlin.String]#kronos.OvershotAction/PointingToDeclaration/-kronos/kronos/schedule.html
+$dokka.location:kronos//schedulePeriodic/kronos.Kronos#kotlin.String#[Error type: Unresolved type for Duration]#kronos.Periodic#kotlin.Long?#kotlin.Int?#kotlin.Int?#kotlin.collections.Map[kotlin.String,kotlin.String]#kronos.OvershotAction/PointingToDeclaration/-kronos/kronos/schedule-periodic.html
+$dokka.location:kronos//schedulePeriodic/kronos.Kronos#kotlin.String#kotlin.Long#kronos.Periodic#kotlin.Long?#kotlin.Int?#kotlin.Int?#kotlin.collections.Map[kotlin.String,kotlin.String]#kronos.OvershotAction/PointingToDeclaration/-kronos/kronos/schedule-periodic.html
+$dokka.location:kronos/Job///PointingToDeclaration/-kronos/kronos/-job/index.html
+$dokka.location:kronos/Job/challengeRun/#kotlin.Int#kotlin.collections.Map[kotlin.String,kotlin.Any]/PointingToDeclaration/-kronos/kronos/-job/challenge-run.html
+$dokka.location:kronos/Job/execute/#kotlin.Int#kotlin.collections.Map[kotlin.String,kotlin.Any]/PointingToDeclaration/-kronos/kronos/-job/execute.html
+$dokka.location:kronos/Job/name/#/PointingToDeclaration/-kronos/kronos/-job/name.html
+$dokka.location:kronos/Job/onDrop/#kotlin.String#kotlin.Boolean/PointingToDeclaration/-kronos/kronos/-job/on-drop.html
+$dokka.location:kronos/Job/onFail/#kotlin.Int#kotlin.collections.Map[kotlin.String,kotlin.Any]#java.lang.Exception?/PointingToDeclaration/-kronos/kronos/-job/on-fail.html
+$dokka.location:kronos/Job/onLasCycleDrop/#kotlin.String#kotlin.collections.Map[kotlin.String,kotlin.Any]/PointingToDeclaration/-kronos/kronos/-job/on-las-cycle-drop.html
+$dokka.location:kronos/Job/onRetryFail/#kotlin.Int#kotlin.Int#kotlin.collections.Map[kotlin.String,kotlin.Any]#java.lang.Exception?/PointingToDeclaration/-kronos/kronos/-job/on-retry-fail.html
+$dokka.location:kronos/Job/onSuccess/#kotlin.Int#kotlin.collections.Map[kotlin.String,kotlin.Any]/PointingToDeclaration/-kronos/kronos/-job/on-success.html
+$dokka.location:kronos/Job/periodicJobLoaded/#kotlin.String#kotlin.String/PointingToDeclaration/-kronos/kronos/-job/periodic-job-loaded.html
+$dokka.location:kronos/Job/retries/#/PointingToDeclaration/-kronos/kronos/-job/retries.html
+$dokka.location:kronos/KronoJob///PointingToDeclaration/-kronos/kronos/-krono-job/index.html
+$dokka.location:kronos/KronoJob/KronoJob/#kotlin.String#kotlin.String#kotlin.collections.Map[kotlin.String,kotlin.String]#kotlin.Long#kotlin.Long?#[Error type: Unresolved type for Duration]?#kronos.Periodic?#kotlin.Int?#kotlin.Int#kotlin.Long#[Error type: Unresolved type for LocalDateTime]#kotlin.Int#kronos.OvershotAction/PointingToDeclaration/-kronos/kronos/-krono-job/-krono-job.html
+$dokka.location:kronos/KronoJob/closedEnd/#/PointingToDeclaration/-kronos/kronos/-krono-job/closed-end.html
+$dokka.location:kronos/KronoJob/createdAt/#/PointingToDeclaration/-kronos/kronos/-krono-job/created-at.html
+$dokka.location:kronos/KronoJob/endTime/#/PointingToDeclaration/-kronos/kronos/-krono-job/end-time.html
+$dokka.location:kronos/KronoJob/id/#/PointingToDeclaration/-kronos/kronos/-krono-job/id.html
+$dokka.location:kronos/KronoJob/interval/#/PointingToDeclaration/-kronos/kronos/-krono-job/interval.html
+$dokka.location:kronos/KronoJob/jobName/#/PointingToDeclaration/-kronos/kronos/-krono-job/job-name.html
+$dokka.location:kronos/KronoJob/locks/#/PointingToDeclaration/-kronos/kronos/-krono-job/locks.html
+$dokka.location:kronos/KronoJob/maxCycles/#/PointingToDeclaration/-kronos/kronos/-krono-job/max-cycles.html
+$dokka.location:kronos/KronoJob/originCreatedAt/#/PointingToDeclaration/-kronos/kronos/-krono-job/origin-created-at.html
+$dokka.location:kronos/KronoJob/overshotAction/#/PointingToDeclaration/-kronos/kronos/-krono-job/overshot-action.html
+$dokka.location:kronos/KronoJob/params/#/PointingToDeclaration/-kronos/kronos/-krono-job/params.html
+$dokka.location:kronos/KronoJob/periodic/#/PointingToDeclaration/-kronos/kronos/-krono-job/periodic.html
+$dokka.location:kronos/KronoJob/repeatedJob/#/PointingToDeclaration/-kronos/kronos/-krono-job/repeated-job.html
+$dokka.location:kronos/KronoJob/retries/#/PointingToDeclaration/-kronos/kronos/-krono-job/retries.html
+$dokka.location:kronos/KronoJob/startTime/#/PointingToDeclaration/-kronos/kronos/-krono-job/start-time.html
+$dokka.location:kronos/Kronos///PointingToDeclaration/-kronos/kronos/-kronos/index.html
+$dokka.location:kronos/Kronos/allJobs/#/PointingToDeclaration/-kronos/kronos/-kronos/all-jobs.html
+$dokka.location:kronos/Kronos/allJobs/#kotlin.String/PointingToDeclaration/-kronos/kronos/-kronos/all-jobs.html
+$dokka.location:kronos/Kronos/checkJob/#kotlin.String/PointingToDeclaration/-kronos/kronos/-kronos/check-job.html
+$dokka.location:kronos/Kronos/dropAll/#/PointingToDeclaration/-kronos/kronos/-kronos/drop-all.html
+$dokka.location:kronos/Kronos/dropJob/#kotlin.String/PointingToDeclaration/-kronos/kronos/-kronos/drop-job.html
+$dokka.location:kronos/Kronos/dropJobId/#kotlin.String/PointingToDeclaration/-kronos/kronos/-kronos/drop-job-id.html
+$dokka.location:kronos/Kronos/init/#kronos.KronosStore#[Error type: Unresolved type for CoroutineDispatcher]/PointingToDeclaration/-kronos/kronos/-kronos/init.html
+$dokka.location:kronos/Kronos/lastPingTime/#/PointingToDeclaration/-kronos/kronos/-kronos/last-ping-time.html
+$dokka.location:kronos/Kronos/onError/#/PointingToDeclaration/-kronos/kronos/-kronos/on-error.html
+$dokka.location:kronos/Kronos/register/#kronos.Job/PointingToDeclaration/-kronos/kronos/-kronos/register.html
+$dokka.location:kronos/KronosStore///PointingToDeclaration/-kronos/kronos/-kronos-store/index.html
+$dokka.location:kronos/KronosStore/acquireLock/#kotlin.String/PointingToDeclaration/-kronos/kronos/-kronos-store/acquire-lock.html
+$dokka.location:kronos/KronosStore/close/#/PointingToDeclaration/-kronos/kronos/-kronos-store/close.html
+$dokka.location:kronos/KronosStore/countByName/#kotlin.String/PointingToDeclaration/-kronos/kronos/-kronos-store/count-by-name.html
+$dokka.location:kronos/KronosStore/delete/#kotlin.String/PointingToDeclaration/-kronos/kronos/-kronos-store/delete.html
+$dokka.location:kronos/KronosStore/deleteAll/#/PointingToDeclaration/-kronos/kronos/-kronos-store/delete-all.html
+$dokka.location:kronos/KronosStore/deleteByName/#kotlin.String/PointingToDeclaration/-kronos/kronos/-kronos-store/delete-by-name.html
+$dokka.location:kronos/KronosStore/fetchDueJobs/#kotlin.Long/PointingToDeclaration/-kronos/kronos/-kronos-store/fetch-due-jobs.html
+$dokka.location:kronos/KronosStore/findAll/#/PointingToDeclaration/-kronos/kronos/-kronos-store/find-all.html
+$dokka.location:kronos/KronosStore/findById/#kotlin.String/PointingToDeclaration/-kronos/kronos/-kronos-store/find-by-id.html
+$dokka.location:kronos/KronosStore/findByName/#kotlin.String/PointingToDeclaration/-kronos/kronos/-kronos-store/find-by-name.html
+$dokka.location:kronos/KronosStore/initialize/#/PointingToDeclaration/-kronos/kronos/-kronos-store/initialize.html
+$dokka.location:kronos/KronosStore/insert/#kronos.KronoJob/PointingToDeclaration/-kronos/kronos/-kronos-store/insert.html
+$dokka.location:kronos/OvershotAction.Drop///PointingToDeclaration/{"org.jetbrains.dokka.links.EnumEntryDRIExtra":{"key":"org.jetbrains.dokka.links.EnumEntryDRIExtra"}}-kronos/kronos/-overshot-action/-drop/index.html
+$dokka.location:kronos/OvershotAction.Fire///PointingToDeclaration/{"org.jetbrains.dokka.links.EnumEntryDRIExtra":{"key":"org.jetbrains.dokka.links.EnumEntryDRIExtra"}}-kronos/kronos/-overshot-action/-fire/index.html
+$dokka.location:kronos/OvershotAction.Nothing///PointingToDeclaration/{"org.jetbrains.dokka.links.EnumEntryDRIExtra":{"key":"org.jetbrains.dokka.links.EnumEntryDRIExtra"}}-kronos/kronos/-overshot-action/-nothing/index.html
+$dokka.location:kronos/OvershotAction///PointingToDeclaration/-kronos/kronos/-overshot-action/index.html
+$dokka.location:kronos/OvershotAction/valueOf/#kotlin.String/PointingToDeclaration/-kronos/kronos/-overshot-action/value-of.html
+$dokka.location:kronos/OvershotAction/values/#/PointingToDeclaration/-kronos/kronos/-overshot-action/values.html
+$dokka.location:kronos/Periodic.Companion///PointingToDeclaration/-kronos/kronos/-periodic/-companion/index.html
+$dokka.location:kronos/Periodic.Companion/everyDay/#kotlin.Int#kotlin.Int/PointingToDeclaration/-kronos/kronos/-periodic/-companion/every-day.html
+$dokka.location:kronos/Periodic.Companion/everyHour/#kotlin.Int/PointingToDeclaration/-kronos/kronos/-periodic/-companion/every-hour.html
+$dokka.location:kronos/Periodic.Companion/everyMinute/#/PointingToDeclaration/-kronos/kronos/-periodic/-companion/every-minute.html
+$dokka.location:kronos/Periodic.Companion/everyMonth/#kotlin.Int#kotlin.Int#kotlin.Int/PointingToDeclaration/-kronos/kronos/-periodic/-companion/every-month.html
+$dokka.location:kronos/Periodic.Companion/everyWeek/#kotlin.Int#kotlin.Int#kotlin.Int/PointingToDeclaration/-kronos/kronos/-periodic/-companion/every-week.html
+$dokka.location:kronos/Periodic.Companion/everyYear/#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.Int/PointingToDeclaration/-kronos/kronos/-periodic/-companion/every-year.html
+$dokka.location:kronos/Periodic.Every.day///PointingToDeclaration/{"org.jetbrains.dokka.links.EnumEntryDRIExtra":{"key":"org.jetbrains.dokka.links.EnumEntryDRIExtra"}}-kronos/kronos/-periodic/-every/day/index.html
+$dokka.location:kronos/Periodic.Every.hour///PointingToDeclaration/{"org.jetbrains.dokka.links.EnumEntryDRIExtra":{"key":"org.jetbrains.dokka.links.EnumEntryDRIExtra"}}-kronos/kronos/-periodic/-every/hour/index.html
+$dokka.location:kronos/Periodic.Every.minute///PointingToDeclaration/{"org.jetbrains.dokka.links.EnumEntryDRIExtra":{"key":"org.jetbrains.dokka.links.EnumEntryDRIExtra"}}-kronos/kronos/-periodic/-every/minute/index.html
+$dokka.location:kronos/Periodic.Every.month///PointingToDeclaration/{"org.jetbrains.dokka.links.EnumEntryDRIExtra":{"key":"org.jetbrains.dokka.links.EnumEntryDRIExtra"}}-kronos/kronos/-periodic/-every/month/index.html
+$dokka.location:kronos/Periodic.Every.week///PointingToDeclaration/{"org.jetbrains.dokka.links.EnumEntryDRIExtra":{"key":"org.jetbrains.dokka.links.EnumEntryDRIExtra"}}-kronos/kronos/-periodic/-every/week/index.html
+$dokka.location:kronos/Periodic.Every.year///PointingToDeclaration/{"org.jetbrains.dokka.links.EnumEntryDRIExtra":{"key":"org.jetbrains.dokka.links.EnumEntryDRIExtra"}}-kronos/kronos/-periodic/-every/year/index.html
+$dokka.location:kronos/Periodic.Every///PointingToDeclaration/-kronos/kronos/-periodic/-every/index.html
+$dokka.location:kronos/Periodic.Every/valueOf/#kotlin.String/PointingToDeclaration/-kronos/kronos/-periodic/-every/value-of.html
+$dokka.location:kronos/Periodic.Every/values/#/PointingToDeclaration/-kronos/kronos/-periodic/-every/values.html
+$dokka.location:kronos/Periodic///PointingToDeclaration/-kronos/kronos/-periodic/index.html
+$dokka.location:kronos/Periodic/dayOfMonth/#/PointingToDeclaration/-kronos/kronos/-periodic/day-of-month.html
+$dokka.location:kronos/Periodic/dayOfWeek/#/PointingToDeclaration/-kronos/kronos/-periodic/day-of-week.html
+$dokka.location:kronos/Periodic/every/#/PointingToDeclaration/-kronos/kronos/-periodic/every.html
+$dokka.location:kronos/Periodic/hour/#/PointingToDeclaration/-kronos/kronos/-periodic/hour.html
+$dokka.location:kronos/Periodic/minute/#/PointingToDeclaration/-kronos/kronos/-periodic/minute.html
+$dokka.location:kronos/Periodic/month/#/PointingToDeclaration/-kronos/kronos/-periodic/month.html
+kronos
+
