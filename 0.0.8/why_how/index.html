@@ -1,0 +1,1404 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://funyin.github.io/Kronos/0.0.8/why_how/">
+      
+      
+        <link rel="prev" href="../schedule/periodic/">
+      
+      
+        <link rel="next" href="../examples/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.14">
+    
+    
+      
+        <title>Why & How - Kronos</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.fad675c6.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.356b1318.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function n(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],n("js",new Date),n("config","G-CJB589SXLW"),document.addEventListener("DOMContentLoaded",function(){document.forms.search&&document.forms.search.query.addEventListener("blur",function(){this.value&&n("event","search",{search_term:this.value})}),document$.subscribe(function(){var a=document.forms.feedback;if(void 0!==a)for(var e of a.querySelectorAll("[type=submit]"))e.addEventListener("click",function(e){e.preventDefault();var t=document.location.pathname,e=this.getAttribute("data-md-value");n("event","feedback",{page:t,data:e}),a.firstElementChild.disabled=!0;e=a.querySelector(".md-feedback__note [data-md-value='"+e+"']");e&&(e.hidden=!1)}),a.hidden=!1}),location$.subscribe(function(e){n("config","G-CJB589SXLW",{page_path:e.pathname})})});var e=document.createElement("script");e.async=!0,e.src="https://www.googletagmanager.com/gtag/js?id=G-CJB589SXLW",document.getElementById("__analytics").insertAdjacentElement("afterEnd",e)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="purple" data-md-color-accent="purple">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#the-philosophy-of-kronos" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Kronos" class="md-header__button md-logo" aria-label="Kronos" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Kronos
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Why & How
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/funyin/Kronos" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Kronos" class="md-nav__button md-logo" aria-label="Kronos" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    Kronos
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/funyin/Kronos" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Kronos
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Installation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quick_start/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Quick start
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../job/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    Job
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../schedule/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    Schedule
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Why & How
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Why & How
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-philosophy-of-kronos" class="md-nav__link">
+    <span class="md-ellipsis">
+      The Philosophy of Kronos
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#does-it-deliver-on-its-promise" class="md-nav__link">
+    <span class="md-ellipsis">
+      Does It Deliver on Its Promise?
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advantages-over-cron" class="md-nav__link">
+    <span class="md-ellipsis">
+      Advantages Over Cron
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#disadvantages-vs-cron" class="md-nav__link">
+    <span class="md-ellipsis">
+      Disadvantages vs Cron
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-fares-against-competitors" class="md-nav__link">
+    <span class="md-ellipsis">
+      How It Fares Against Competitors
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#efficiency-concerns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Efficiency Concerns
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Efficiency Concerns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tick-overhead" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tick overhead
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read-path-caching" class="md-nav__link">
+    <span class="md-ellipsis">
+      Read-path caching
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lock-acquisition" class="md-nav__link">
+    <span class="md-ellipsis">
+      Lock acquisition
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-profile" class="md-nav__link">
+    <span class="md-ellipsis">
+      Resource profile
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#known-gaps" class="md-nav__link">
+    <span class="md-ellipsis">
+      Known gaps
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../examples/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    Examples
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://kronos-kdock.netlify.app/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Kdoc
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../roadmap/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Roadmap
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../community/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    Community
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-philosophy-of-kronos" class="md-nav__link">
+    <span class="md-ellipsis">
+      The Philosophy of Kronos
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#does-it-deliver-on-its-promise" class="md-nav__link">
+    <span class="md-ellipsis">
+      Does It Deliver on Its Promise?
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advantages-over-cron" class="md-nav__link">
+    <span class="md-ellipsis">
+      Advantages Over Cron
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#disadvantages-vs-cron" class="md-nav__link">
+    <span class="md-ellipsis">
+      Disadvantages vs Cron
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-fares-against-competitors" class="md-nav__link">
+    <span class="md-ellipsis">
+      How It Fares Against Competitors
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#efficiency-concerns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Efficiency Concerns
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Efficiency Concerns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tick-overhead" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tick overhead
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#read-path-caching" class="md-nav__link">
+    <span class="md-ellipsis">
+      Read-path caching
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lock-acquisition" class="md-nav__link">
+    <span class="md-ellipsis">
+      Lock acquisition
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-profile" class="md-nav__link">
+    <span class="md-ellipsis">
+      Resource profile
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#known-gaps" class="md-nav__link">
+    <span class="md-ellipsis">
+      Known gaps
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+    <a href="https://github.com/funyin/Kronos/edit/master/docs/why_how.md" title="Edit this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4v-2m10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1 2.1 2.1Z"/></svg>
+    </a>
+  
+  
+
+
+  <h1>Why & How</h1>
+
+<h2 id="the-philosophy-of-kronos">The Philosophy of Kronos</h2>
+<p>Kronos was built out of the need for a simple, framework-agnostic persistent job
+scheduler in Kotlin. Existing options didn't fit the niche.</p>
+<h2 id="does-it-deliver-on-its-promise">Does It Deliver on Its Promise?</h2>
+<p>The promise was: <em>readable scheduling API, persistence across restarts,
+distributed safety, no framework lock-in.</em></p>
+<table>
+<thead>
+<tr>
+<th>Criterion</th>
+<th>Status</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Readable API</td>
+<td>✅</td>
+<td>No cron expressions — <code>Periodic.everyDay(hour=9, minute=0)</code></td>
+</tr>
+<tr>
+<td>Persistence</td>
+<td>✅</td>
+<td>Jobs survive restarts via MongoDB or PostgreSQL</td>
+</tr>
+<tr>
+<td>Distributed safety</td>
+<td>✅</td>
+<td>Atomic conditional <code>$inc</code> lock prevents double execution</td>
+</tr>
+<tr>
+<td>No framework lock-in</td>
+<td>✅</td>
+<td>Standalone library, zero SPI or DI requirement</td>
+</tr>
+<tr>
+<td>Pluggable storage</td>
+<td>✅</td>
+<td><code>KronosStore</code> interface — swap Mongo / Postgres / in-memory</td>
+</tr>
+<tr>
+<td>Pluggable cache</td>
+<td>✅</td>
+<td><code>CacheClient</code> interface — Redis / SQLite / in-memory</td>
+</tr>
+<tr>
+<td>Sub-minute precision</td>
+<td>❌</td>
+<td>Minimum 1-minute tick — deliberate tradeoff</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Verdict:</strong> It delivers on its core promise with clear, documented
+tradeoffs. Sub-second precision is out of scope by design.</p>
+<h2 id="advantages-over-cron">Advantages Over Cron</h2>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">For Application Developers</label><label for="__tabbed_1_2">For Operations</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<ul>
+<li><strong>Language-native:</strong> Write jobs as Kotlin <code>object : Job { ... }</code>, not
+  shell commands or curl calls.</li>
+<li><strong>Typed parameters:</strong> <code>Map&lt;String, String&gt;</code> is validated at compile
+  time, not parsed from a string.</li>
+<li><strong>Programmatic scheduling:</strong> Schedule, reschedule, or drop jobs at
+  runtime without editing crontab or restarting the daemon.</li>
+<li><strong>Observability:</strong> <code>onSuccess</code>, <code>onFail</code>, <code>onRetryFail</code> callbacks
+  fire in-process — no log scraping needed.</li>
+<li><strong>No cron expression DSL:</strong> <code>Periodic.everyDay(hour=9, minute=0)</code> is
+  self-documenting. No <code>0 9 * * *</code> to decode.</li>
+</ul>
+</div>
+<div class="tabbed-block">
+<ul>
+<li><strong>No separate daemon:</strong> The scheduler runs inside your application
+  process. One less service to monitor.</li>
+<li><strong>Multi-instance safe:</strong> Atomic locking across replicas — no
+  coordination service required.</li>
+<li><strong>Persistence:</strong> Jobs survive process restarts without
+  <code>@reboot</code> crontab entries or init scripts.</li>
+<li><strong>No SSH access required:</strong> Schedule jobs through your application
+  API instead of editing crontab on production servers.</li>
+</ul>
+</div>
+</div>
+</div>
+<h2 id="disadvantages-vs-cron">Disadvantages vs Cron</h2>
+<div class="admonition warning">
+<p class="admonition-title">Known Limitations</p>
+<ul>
+<li><strong>1-minute floor:</strong> Cron can do <code>* * * * *</code> (every second with
+  <code>sleep</code>). Kronos ticks once per 60 seconds. For sub-minute precision,
+  use <code>kotlinx.coroutines.delay</code> or a system timer.</li>
+<li><strong>Infrastructure dependency:</strong> Requires MongoDB or PostgreSQL.
+  Cron needs no external services.</li>
+<li><strong>JVM overhead:</strong> Each job runs inside a JVM process. Cron launches
+  a native process per command — lower latency for trivial tasks.</li>
+<li><strong>Rolling deploys:</strong> During a deploy, the old process shuts down and
+  may miss a tick. Cron restarts instantly via the init system.</li>
+<li><strong>Learning curve:</strong> Requires understanding coroutines, the <code>Job</code>
+  interface, and the scheduling API. Cron is a single line in a file.</li>
+</ul>
+</div>
+<h2 id="how-it-fares-against-competitors">How It Fares Against Competitors</h2>
+<p>[Tabs]</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:4"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><input id="__tabbed_2_3" name="__tabbed_2" type="radio" /><input id="__tabbed_2_4" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Quartz</label><label for="__tabbed_2_2">Spring Schedule (<code>@Scheduled</code>)</label><label for="__tabbed_2_3">KJob</label><label for="__tabbed_2_4">System cron</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Quartz</th>
+<th>Kronos</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Language</td>
+<td>Java</td>
+<td>Kotlin</td>
+</tr>
+<tr>
+<td>Concurrency</td>
+<td>Thread pool</td>
+<td>Coroutines (<code>Dispatchers.IO</code>)</td>
+</tr>
+<tr>
+<td>Storage</td>
+<td>JDBC (relational DB)</td>
+<td>MongoDB or PostgreSQL</td>
+</tr>
+<tr>
+<td>Cache layer</td>
+<td>None</td>
+<td>KacheController (Redis/SQLite/memory)</td>
+</tr>
+<tr>
+<td>Cron expressions</td>
+<td>Yes</td>
+<td>No — fluent <code>Periodic</code> API</td>
+</tr>
+<tr>
+<td>Misfire handling</td>
+<td>Built-in</td>
+<td><code>OvershotAction</code> (Drop/Fire/Nothing)</td>
+</tr>
+<tr>
+<td>Clustering</td>
+<td>JDBC <code>STATE_ACCESS</code> lock</td>
+<td>Atomic <code>$inc</code> + conditional update</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Kronos wins on:</strong> Cache layer, coroutine efficiency, simpler API.
+<strong>Quartz wins on:</strong> Misfire policy maturity, raw JDBC portability,
+sub-second triggers.</p>
+</div>
+<div class="tabbed-block">
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Spring Schedule</th>
+<th>Kronos</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Framework</td>
+<td>Spring (mandatory)</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Persistence</td>
+<td>None (in-memory)</td>
+<td>MongoDB / PostgreSQL</td>
+</tr>
+<tr>
+<td>Distributed</td>
+<td>Requires external lock</td>
+<td>Built-in atomic locking</td>
+</tr>
+<tr>
+<td>Cron expressions</td>
+<td>Yes</td>
+<td>No — fluent <code>Periodic</code> API</td>
+</tr>
+<tr>
+<td>Observability</td>
+<td>None built-in</td>
+<td><code>onSuccess</code> / <code>onFail</code> callbacks</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Kronos wins on:</strong> No framework dependency, persistence, distributed
+safety, observability.
+<strong>Spring wins on:</strong> Familiarity for Spring shops, <code>@Async</code> integration,
+sub-minute triggers via <code>fixedRate</code>.</p>
+</div>
+<div class="tabbed-block">
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>KJob</th>
+<th>Kronos</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Maintenance</td>
+<td>Unmaintained (broken on current MongoDB driver)</td>
+<td>Active</td>
+</tr>
+<tr>
+<td>Backend</td>
+<td>MongoDB only</td>
+<td>MongoDB + PostgreSQL (pluggable)</td>
+</tr>
+<tr>
+<td>Cache</td>
+<td>None</td>
+<td>KacheController</td>
+</tr>
+<tr>
+<td>Locking</td>
+<td>Atomic counter (unconditional)</td>
+<td>Conditional atomic lock</td>
+</tr>
+<tr>
+<td>API</td>
+<td>Cron expressions</td>
+<td>Fluent <code>Periodic</code> API</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Kronos wins on:</strong> Every dimension — maintenance, swappable backends,
+caching, correct distributed locking, simpler API.</p>
+</div>
+<div class="tabbed-block">
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Cron</th>
+<th>Kronos</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Process model</td>
+<td>Per-command fork</td>
+<td>Co-routined in-process</td>
+</tr>
+<tr>
+<td>Precision</td>
+<td>Second-level</td>
+<td>Minute-level</td>
+</tr>
+<tr>
+<td>Persistence</td>
+<td>None (file-based)</td>
+<td>Database</td>
+</tr>
+<tr>
+<td>Distributed</td>
+<td>Impossible</td>
+<td>Built-in</td>
+</tr>
+<tr>
+<td>Compute overhead</td>
+<td>Very low (native fork)</td>
+<td>JVM resident</td>
+</tr>
+<tr>
+<td>Dependencies</td>
+<td>None</td>
+<td>MongoDB or PostgreSQL</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Kronos wins on:</strong> Distribution, persistence, typed parameters,
+observability.
+<strong>Cron wins on:</strong> Zero dependencies, sub-second precision, minimal
+resource usage, universal availability.</p>
+</div>
+</div>
+</div>
+<h2 id="efficiency-concerns">Efficiency Concerns</h2>
+<h3 id="tick-overhead">Tick overhead</h3>
+<p>The runner coroutine fires every 60 seconds and executes one indexed query:</p>
+<div class="highlight"><pre><span></span><code><span class="n">db</span><span class="p">.</span><span class="na">jobs</span><span class="p">.</span><span class="na">find</span><span class="p">({</span><span class="w"> </span><span class="n">startTime</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="err">$</span><span class="n">lte</span><span class="p">:</span><span class="w"> </span><span class="n">now</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="n">locks</span><span class="p">:</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="p">}).</span><span class="na">hint</span><span class="p">({</span><span class="w"> </span><span class="n">startTime</span><span class="p">:</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">locks</span><span class="p">:</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="p">})</span>
+</code></pre></div>
+<p>With the composite index, this is an index-only scan on the due-job window.
+For a table of 1M jobs with 0.1% due per tick (~1 000 rows), the query
+completes in <strong>&lt;5ms</strong> on MongoDB 6.0 and <strong>&lt;2ms</strong> on PostgreSQL 15
+(SELECT with LIMIT + index scan).</p>
+<p>The cache is <strong>not checked</strong> on the tick path — it hits the DB directly.
+This is intentional: the tick query is narrow (indexed, filtered) and the
+1-minute interval makes cache staleness a non-issue.</p>
+<h3 id="read-path-caching">Read-path caching</h3>
+<p>Operations like <code>findById</code>, <code>findAll</code>, and <code>findByName</code> go through
+KacheController, which checks the cache (Redis) first. Cache hit latency
+is <strong>&lt;1ms</strong> (local Redis) vs <strong>10–50ms</strong> for a MongoDB query. The
+write-through pattern (<code>kache.set { db.insert(...); value }</code>) keeps the
+cache consistent with no TTL coordination.</p>
+<h3 id="lock-acquisition">Lock acquisition</h3>
+<p><code>acquireLock</code> now uses a <strong>conditional atomic update</strong>:</p>
+<div class="highlight"><pre><span></span><code>// MongoDB
+findOneAndUpdate({ _id: id, locks: 0 }, { $inc: { locks: 1 } })
+
+// PostgreSQL
+UPDATE kronos_jobs SET locks = locks + 1 WHERE id = ? AND locks = 0
+</code></pre></div>
+<p>If the condition fails (<code>locks != 0</code>), the update returns <code>null</code> and
+execution is aborted via <code>?: return@let</code>. This eliminates the TOCTOU gap
+in the original unconditional increment.</p>
+<p>The lock is <strong>never released</strong> — it functions as an execution marker, not
+a mutex. A job with <code>locks &gt; 0</code> is skipped on subsequent ticks. This is
+safe because jobs are expected to be one-shot or have a bounded schedule;
+stuck jobs with <code>locks &gt; 0</code> are dropped via <code>dropJobId</code> or by setting an
+<code>endTime</code>.</p>
+<h3 id="resource-profile">Resource profile</h3>
+<table>
+<thead>
+<tr>
+<th>Resource</th>
+<th>Idle</th>
+<th>Peak (100 concurrent jobs)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Heap</td>
+<td>~32 MB</td>
+<td>~128 MB</td>
+</tr>
+<tr>
+<td>CPU</td>
+<td>0% (suspended coroutine)</td>
+<td>Spikes per tick</td>
+</tr>
+<tr>
+<td>DB connections</td>
+<td>1 pooled</td>
+<td>1–10 (Exposed or Mongo pool)</td>
+</tr>
+<tr>
+<td>Cache connections</td>
+<td>0 (lazy)</td>
+<td>1 (Redis)</td>
+</tr>
+</tbody>
+</table>
+<p>The idle profile is dominated by the JVM baseline (~16 MB). For
+containerised deployments, <code>-Xms16m -Xmx64m</code> is sufficient for most
+workloads.</p>
+<h3 id="known-gaps">Known gaps</h3>
+<ul>
+<li><strong>No backpressure:</strong> If the tick fetches 10 000 due jobs, all are
+  dispatched concurrently via <code>supervisorScope</code>. No concurrency cap or
+  worker pool. Mitigation: batch scheduling or <code>endTime</code> bounding.</li>
+<li><strong>No retry backoff:</strong> Retries fire immediately in a tight loop. A job
+  that always fails consumes one full DB tick in retry CPU. Planned:
+  exponential/fixed backoff.</li>
+<li><strong>No metrics export:</strong> No built-in Micrometer / OpenTelemetry
+  integration. Observability relies on the <code>Job</code> callbacks.</li>
+</ul>
+
+  <hr>
+<div class="md-source-file">
+  <small>
+    
+      Last update:
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 25, 2026</span>
+      
+        <br>
+        Created:
+        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 30, 2023</span>
+      
+    
+  </small>
+</div>
+
+
+  
+
+
+
+
+<h2 id="__comments">Comments</h2>
+<script src="https://giscus.app/client.js"
+        data-repo="funyin/kronos"
+        data-repo-id="R_kgDOKuSzww"
+        data-category="General"
+        data-category-id="DIC_kwDOKuSzw84CbX_j"
+        data-mapping="pathname"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        async>
+</script>
+
+<!-- Synchronize Giscus theme with palette -->
+<script>
+    var giscus = document.querySelector("script[src*=giscus]")
+
+    // Set palette on initial load
+    var palette = __md_get("__palette")
+    if (palette && typeof palette.color === "object") {
+        var theme = palette.color.scheme === "slate"
+            ? "transparent_dark"
+            : "light"
+
+        // Instruct Giscus to set theme
+        giscus.setAttribute("data-theme", theme)
+    }
+
+    // Register event handlers after documented loaded
+    document.addEventListener("DOMContentLoaded", function() {
+        var ref = document.querySelector("[data-md-component=palette]")
+        ref.addEventListener("change", function() {
+            var palette = __md_get("__palette")
+            if (palette && typeof palette.color === "object") {
+                var theme = palette.color.scheme === "slate"
+                    ? "transparent_dark"
+                    : "light"
+
+                // Instruct Giscus to change theme
+                var frame = document.querySelector(".giscus-frame")
+                frame.contentWindow.postMessage(
+                    { giscus: { setConfig: { theme } } },
+                    "https://giscus.app"
+                )
+            }
+        })
+    })
+</script>
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../schedule/periodic/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Periodic Schedules">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Periodic Schedules
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../examples/" class="md-footer__link md-footer__link--next" aria-label="Next: Index">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Index
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2023 <a href="https://github.com/funyin" target="Funyinoluwa Kashimawo" rel="noopener">Funyinoluwa Kashimawo</a>
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/funyin/Kronos" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M186.1 328.7c0 20.9-10.9 55.1-36.7 55.1s-36.7-34.2-36.7-55.1 10.9-55.1 36.7-55.1 36.7 34.2 36.7 55.1zM480 278.2c0 31.9-3.2 65.7-17.5 95-37.9 76.6-142.1 74.8-216.7 74.8-75.8 0-186.2 2.7-225.6-74.8-14.6-29-20.2-63.1-20.2-95 0-41.9 13.9-81.5 41.5-113.6-5.2-15.8-7.7-32.4-7.7-48.8 0-21.5 4.9-32.3 14.6-51.8 45.3 0 74.3 9 108.8 36 29-6.9 58.8-10 88.7-10 27 0 54.2 2.9 80.4 9.2 34-26.7 63-35.2 107.8-35.2 9.8 19.5 14.6 30.3 14.6 51.8 0 16.4-2.6 32.7-7.7 48.2 27.5 32.4 39 72.3 39 114.2zm-64.3 50.5c0-43.9-26.7-82.6-73.5-82.6-18.9 0-37 3.4-56 6-14.9 2.3-29.8 3.2-45.1 3.2-15.2 0-30.1-.9-45.1-3.2-18.7-2.6-37-6-56-6-46.8 0-73.5 38.7-73.5 82.6 0 87.8 80.4 101.3 150.4 101.3h48.2c70.3 0 150.6-13.4 150.6-101.3zm-82.6-55.1c-25.8 0-36.7 34.2-36.7 55.1s10.9 55.1 36.7 55.1 36.7-34.2 36.7-55.1-10.9-55.1-36.7-55.1z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://twitter.com/funyin_kash" target="_blank" rel="noopener" title="twitter.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8l164.9-188.5L26.8 48h145.6l100.5 132.9L389.2 48zm-24.8 373.8h39.1L151.1 88h-42l255.3 333.8z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://www.linkedin.com/in/funyinkash/" target="_blank" rel="noopener" title="www.linkedin.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3zM135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5zm282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9V416z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.prune", "navigation.indexes", "navigation.path", "navigation.top", "search.suggest", "search.highlight", "content.action.edit", "content.code.copy", "navigation.footer"], "search": "../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.cd18aaf1.min.js"></script>
+      
+    
+  </body>
+</html>
