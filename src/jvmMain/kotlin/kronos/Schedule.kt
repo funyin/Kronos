@@ -5,8 +5,6 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.DurationUnit
-import kotlin.time.toDuration
 
 //<editor-fold desc="Schedule Functions">
 
@@ -178,35 +176,13 @@ internal suspend fun Kronos.rescheduleJob(job: KronoJob): String? {
 internal fun delayToStartTime(delay: Duration) =
     Clock.System.now().plus(delay).toEpochMilliseconds()
 
-internal fun nextPeriodicTime(startTime: Long, periodic: Periodic?): Long {
-    return startTime.let {
-        when (periodic?.every) {
-            Periodic.Every.minute -> {
-                startTime.plus(1.toDuration(DurationUnit.MINUTES).toLong(DurationUnit.MILLISECONDS))
-            }
-
-            Periodic.Every.hour -> {
-                startTime.plus(1.toDuration(DurationUnit.HOURS).toLong(DurationUnit.MILLISECONDS))
-            }
-
-            Periodic.Every.day -> {
-                startTime.plus(1.toDuration(DurationUnit.DAYS).toLong(DurationUnit.MILLISECONDS))
-            }
-
-            Periodic.Every.week -> {
-                startTime.plus(7.toDuration(DurationUnit.DAYS).toLong(DurationUnit.MILLISECONDS))
-            }
-
-            Periodic.Every.month -> {
-                startTime.plus(30.toDuration(DurationUnit.DAYS).toLong(DurationUnit.MILLISECONDS))
-            }
-
-            Periodic.Every.year -> {
-                startTime.plus(365.toDuration(DurationUnit.DAYS).toLong(DurationUnit.MILLISECONDS))
-            }
-
-            null -> it
-        }
-    }
-}
+/**
+ * Returns the epoch millis of the smallest occurrence of [periodic] that is >= [startTime].
+ *
+ * Used both to compute a job's first occurrence at schedule-time, and (by passing
+ * `lastFiredStartTime + 1 minute`) to compute the next occurrence strictly after one that
+ * just fired.
+ */
+internal fun nextPeriodicTime(startTime: Long, periodic: Periodic): Long =
+    alignToPeriodic(Instant.fromEpochMilliseconds(startTime), periodic).toEpochMilliseconds()
 //</editor-fold>

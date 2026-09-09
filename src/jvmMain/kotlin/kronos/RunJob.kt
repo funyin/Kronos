@@ -45,7 +45,9 @@ internal suspend fun Kronos.runJob(
                     jobName = kronoJob.jobName,
                     //This is what sets the start time for the next job
                     startTime = if (kronoJob.periodic != null)
-                        nextPeriodicTime(kronoJob.startTime, kronoJob.periodic)
+                        //+1 minute so we compute the occurrence strictly after the one that just fired,
+                        //rather than re-aligning onto the same slot
+                        nextPeriodicTime(kronoJob.startTime + 60_000L, kronoJob.periodic)
                     else
                         currentInstant.plus(delay).toEpochMilliseconds(),
                     interval = kronoJob.interval,

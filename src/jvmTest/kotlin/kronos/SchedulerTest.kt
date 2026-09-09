@@ -14,10 +14,62 @@ import java.time.Month
 import kotlin.coroutines.CoroutineContext
 import kotlin.test.Test
 import kotlin.test.assertFails
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
+
+/**
+ * In-memory [KronosStore] that actually persists insert/delete/lock state, so tests can drive
+ * multiple scheduling cycles (reschedule -> drop -> reschedule ...) the same way a real backend
+ * would, instead of a static mock that always returns the same document.
+ */
+private class FakeKronosStore : KronosStore {
+    val jobsById = mutableMapOf<String, KronoJob>()
+
+    fun seed(job: KronoJob) {
+        jobsById[job.id] = job
+    }
+
+    override suspend fun initialize() = Unit
+
+    override suspend fun insert(job: KronoJob): KronoJob? {
+        jobsById[job.id] = job
+        return job
+    }
+
+    override suspend fun fetchDueJobs(nowMs: Long): List<KronoJob> =
+        jobsById.values.filter { it.startTime <= nowMs && it.locks == 0 }
+
+    override suspend fun findById(id: String): KronoJob? = jobsById[id]
+
+    override suspend fun findAll(): List<KronoJob> = jobsById.values.toList()
+
+    override suspend fun findByName(name: String): List<KronoJob> = jobsById.values.filter { it.jobName == name }
+
+    override suspend fun countByName(name: String): Long = jobsById.values.count { it.jobName == name }.toLong()
+
+    override suspend fun acquireLock(id: String): KronoJob? {
+        val job = jobsById[id] ?: return null
+        if (job.locks != 0) return null
+        val locked = job.copy(locks = job.locks + 1)
+        jobsById[id] = locked
+        return locked
+    }
+
+    override suspend fun delete(id: String): KronoJob? = jobsById.remove(id)
+
+    override suspend fun deleteByName(name: String): Boolean {
+        jobsById.values.filter { it.jobName == name }.map { it.id }.forEach { jobsById.remove(it) }
+        return true
+    }
+
+    override suspend fun deleteAll(): Boolean {
+        jobsById.clear()
+        return true
+    }
+}
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SchedulerTest {
@@ -32,167 +84,150 @@ class SchedulerTest {
 
     @Test
     fun `every year  at month, dayOfMonth, hour and minute`() = runTest(timeout = 20.seconds) {
+        val periodic = Periodic.everyYear(month = 5, dayOfMonth = 8, hour = 5, minute = 5)
+        val store = FakeKronosStore()
+        fakeMocks(store, TestDataProvider.sampleSpyJob)
 
-        val currentTime = Clock.System.now()
-        val dayOfMonth = 8
-        val month = 5
-        val kronoJob = spyk<KronoJob>(
+        val firstFire = alignToPeriodic(Clock.System.now(), periodic)
+        store.seed(
             KronoJob(
                 jobName = TestDataProvider.sampleSpyJob.name,
-                startTime = currentTime.plus(1L.toDuration(DurationUnit.MINUTES)).toEpochMilliseconds(),
+                startTime = firstFire.toEpochMilliseconds(),
                 params = emptyMap(),
-                periodic = Periodic.everyYear(month, dayOfMonth, 5, 5),
+                periodic = periodic,
                 overshotAction = OvershotAction.Drop
             )
         )
 
-        extraMocks(kronoJob, TestDataProvider.sampleSpyJob)
-        //365
-        val minutesInYear = 365.toDuration(DurationUnit.DAYS).toLong(DurationUnit.MINUTES)
-        val threeYears = minutesInYear * 2
-        (1..threeYears).forEach {
-            val timeAtMinute = currentTime.plus(it.minutes)
-            val toLocalDateTime = timeAtMinute.toLocalDateTime(TimeZone.UTC)
-            //to prevent the test from taking too long
-            if (toLocalDateTime.dayOfMonth == dayOfMonth && toLocalDateTime.monthNumber == month) {
-                Kronos.handleJobs(timeAtMinute)
-                runCurrent()
-            }
+        var current = firstFire
+        repeat(2) {
+            Kronos.handleJobs(current)
+            runCurrent()
+            current = Instant.fromEpochMilliseconds(store.jobsById.values.single().startTime)
         }
 
         coVerify(exactly = 2) {
-            TestDataProvider.sampleSpyJob.execute(
-                any(), any()
-            )
+            TestDataProvider.sampleSpyJob.execute(any(), any())
         }
     }
 
     @Test
     fun `every month at dayOfMonth, hour and minute`() = runTest(timeout = 20.seconds) {
+        val periodic = Periodic.everyMonth(dayOfMonth = 8, hour = 5, minute = 5)
+        val store = FakeKronosStore()
+        fakeMocks(store, TestDataProvider.sampleSpyJob)
 
-        val currentTime = LocalDateTime(
+        val start = LocalDateTime(
             date = LocalDate(year = 2024, month = Month.JANUARY, dayOfMonth = 1),
             time = LocalTime.fromSecondOfDay(1)
         ).toInstant(TimeZone.UTC)
-        val kronoJob = spyk<KronoJob>(
+        val firstFire = alignToPeriodic(start, periodic)
+        store.seed(
             KronoJob(
                 jobName = TestDataProvider.sampleSpyJob.name,
-                startTime = currentTime.plus(1.minutes).toEpochMilliseconds(),
+                startTime = firstFire.toEpochMilliseconds(),
                 params = emptyMap(),
-                periodic = Periodic.everyMonth(8, 5, 5),
+                periodic = periodic,
                 overshotAction = OvershotAction.Drop
             )
         )
 
-        extraMocks(kronoJob, TestDataProvider.sampleSpyJob)
-        //365
-        val minutesInYear = 90.toDuration(DurationUnit.DAYS).toLong(DurationUnit.MINUTES)
-        (1..minutesInYear).forEach {
-            val timeAtMinute = currentTime.plus(it.minutes)
-            //to prevent the test from taking too long
-            if (timeAtMinute.toLocalDateTime(TimeZone.UTC).dayOfMonth == 8) {
-                Kronos.handleJobs(timeAtMinute)
-                runCurrent()
-            }
+        var current = firstFire
+        repeat(3) {
+            Kronos.handleJobs(current)
+            runCurrent()
+            current = Instant.fromEpochMilliseconds(store.jobsById.values.single().startTime)
         }
 
         coVerify(exactly = 3) {
-            TestDataProvider.sampleSpyJob.execute(
-                any(), any()
-            )
+            TestDataProvider.sampleSpyJob.execute(any(), any())
         }
     }
 
     @Test
     fun `every week at weekday, hour and minute`() = runTest(timeout = 20.seconds) {
+        val periodic = Periodic.everyWeek(dayOfWeek = 2, hour = 5, minute = 5)
+        val store = FakeKronosStore()
+        fakeMocks(store, TestDataProvider.sampleSpyJob)
 
-        val currentTime = Clock.System.now()
-        val dayOfWeek = 2
-        val hour = 5
-        val kronoJob = spyk<KronoJob>(
+        val firstFire = alignToPeriodic(Clock.System.now(), periodic)
+        store.seed(
             KronoJob(
                 jobName = TestDataProvider.sampleSpyJob.name,
-                startTime = currentTime.plus(1L.toDuration(DurationUnit.MINUTES)).toEpochMilliseconds(),
+                startTime = firstFire.toEpochMilliseconds(),
                 params = emptyMap(),
-                periodic = Periodic.everyWeek(dayOfWeek, hour, 5),
+                periodic = periodic,
                 overshotAction = OvershotAction.Drop
             )
         )
 
-        extraMocks(kronoJob, TestDataProvider.sampleSpyJob)
-        val minutesInWeek = 7.toDuration(DurationUnit.DAYS).toLong(DurationUnit.MINUTES)
-        (1..minutesInWeek).forEach {
-            val timeAtMinute = currentTime.plus(it.minutes)
-            val toLocalDateTime = timeAtMinute.toLocalDateTime(TimeZone.UTC)
-            //So that test does not run too long and getv ignored
-            if (toLocalDateTime.hour == hour) {
-                Kronos.handleJobs(timeAtMinute)
-                runCurrent()
-            }
+        var current = firstFire
+        repeat(2) {
+            Kronos.handleJobs(current)
+            runCurrent()
+            current = Instant.fromEpochMilliseconds(store.jobsById.values.single().startTime)
         }
 
-        coVerify(exactly = 1) {
-            TestDataProvider.sampleSpyJob.execute(
-                any(), any()
-            )
+        coVerify(exactly = 2) {
+            TestDataProvider.sampleSpyJob.execute(any(), any())
         }
     }
 
     @Test
     fun `every day at hour and minute`() = runTest {
+        val periodic = Periodic.everyDay(5, 5)
+        val store = FakeKronosStore()
+        fakeMocks(store, TestDataProvider.sampleSpyJob)
 
-        val currentTime = Clock.System.now()
-        val kronoJob = spyk<KronoJob>(
+        val firstFire = alignToPeriodic(Clock.System.now(), periodic)
+        store.seed(
             KronoJob(
                 jobName = TestDataProvider.sampleSpyJob.name,
-                startTime = currentTime.plus(1L.toDuration(DurationUnit.MINUTES)).toEpochMilliseconds(),
+                startTime = firstFire.toEpochMilliseconds(),
                 params = emptyMap(),
-                periodic = Periodic.everyDay(5, 5),
+                periodic = periodic,
                 overshotAction = OvershotAction.Drop
             )
         )
 
-        extraMocks(kronoJob, TestDataProvider.sampleSpyJob)
-        val minutesInDay = 1.toDuration(DurationUnit.DAYS).toLong(DurationUnit.MINUTES)
-        val twoDays = minutesInDay * 2
-        (1..twoDays).forEach {
-            val timeAtMinute = currentTime.plus(it.minutes)
-            Kronos.handleJobs(timeAtMinute)
+        var current = firstFire
+        repeat(2) {
+            Kronos.handleJobs(current)
             runCurrent()
+            current = Instant.fromEpochMilliseconds(store.jobsById.values.single().startTime)
         }
 
         coVerify(exactly = 2) {
-            TestDataProvider.sampleSpyJob.execute(
-                any(), any()
-            )
+            TestDataProvider.sampleSpyJob.execute(any(), any())
         }
     }
 
     @Test
     fun `every Hour at minute`() = runTest {
+        val periodic = Periodic.everyHour(5)
+        val store = FakeKronosStore()
+        fakeMocks(store, TestDataProvider.sampleSpyJob)
 
-        val currentTime = Clock.System.now()
-        val kronoJob = spyk<KronoJob>(
+        val firstFire = alignToPeriodic(Clock.System.now(), periodic)
+        store.seed(
             KronoJob(
                 jobName = TestDataProvider.sampleSpyJob.name,
-                startTime = currentTime.plus(1L.toDuration(DurationUnit.MINUTES)).toEpochMilliseconds(),
+                startTime = firstFire.toEpochMilliseconds(),
                 params = emptyMap(),
-                periodic = Periodic.everyHour(5),
+                periodic = periodic,
                 overshotAction = OvershotAction.Drop
             )
         )
 
-        extraMocks(kronoJob, TestDataProvider.sampleSpyJob)
-        (1..59).forEach {
-            val timeAtMinute = currentTime.plus(it.minutes)
-            Kronos.handleJobs(timeAtMinute)
+        var current = firstFire
+        repeat(2) {
+            Kronos.handleJobs(current)
             runCurrent()
+            current = Instant.fromEpochMilliseconds(store.jobsById.values.single().startTime)
         }
 
-        coVerify(exactly = 1) {
-            TestDataProvider.sampleSpyJob.execute(
-                any(), any()
-            )
+        coVerify(exactly = 2) {
+            TestDataProvider.sampleSpyJob.execute(any(), any())
         }
     }
 
@@ -212,9 +247,9 @@ class SchedulerTest {
 
         extraMocks(kronoJob, TestDataProvider.sampleSpyJob)
 
-        Kronos.handleJobs(Instant.fromEpochMilliseconds(kronoJob.startTime).plus(1.minutes))
+        Kronos.handleJobs(Instant.fromEpochMilliseconds(kronoJob.startTime))
         runCurrent()
-        Kronos.handleJobs(Instant.fromEpochMilliseconds(kronoJob.startTime).plus(1.minutes))
+        Kronos.handleJobs(Instant.fromEpochMilliseconds(kronoJob.startTime))
         runCurrent()
 
         coVerify(exactly = 2) {
@@ -428,40 +463,61 @@ class SchedulerTest {
     // ── Scheduling correctness ─────────────────────────────────────────────
 
     @Test
-    fun `every week fires on the correct day of week`() = runTest(timeout = 20.seconds) {
+    fun `every week fires on the correct day of week`() {
         // Jan 1 2024 = Monday. We target Friday (day 5).
-        // In a 10-day window (Jan 1–10) there is exactly 1 Friday (Jan 5).
-        // With the old hardcoded-Monday bug there would be 2 Mondays (Jan 1 + Jan 8),
-        // so `exactly = 1` would fail, catching the regression.
-        val currentTime = LocalDateTime(
+        // With the old hardcoded-Monday bug the aligned occurrence would land on Jan 1 (Monday)
+        // instead of Jan 5 (Friday).
+        val from = LocalDateTime(
             date = LocalDate(year = 2024, month = kotlinx.datetime.Month.JANUARY, dayOfMonth = 1),
             time = LocalTime.fromSecondOfDay(1)
         ).toInstant(TimeZone.UTC)
 
-        val targetDayOfWeek = 5 // Friday
-        val kronoJob = spyk<KronoJob>(
-            KronoJob(
-                jobName = TestDataProvider.sampleSpyJob.name,
-                startTime = currentTime.plus(1L.toDuration(DurationUnit.MINUTES)).toEpochMilliseconds(),
-                params = emptyMap(),
-                periodic = Periodic.everyWeek(dayOfWeek = targetDayOfWeek, hour = 5, minute = 5),
-                overshotAction = OvershotAction.Drop
-            )
-        )
+        val periodic = Periodic.everyWeek(dayOfWeek = 5, hour = 5, minute = 5)
+        val aligned = alignToPeriodic(from, periodic)
+        val expected = LocalDateTime(
+            date = LocalDate(year = 2024, month = kotlinx.datetime.Month.JANUARY, dayOfMonth = 5),
+            time = LocalTime(5, 5)
+        ).toInstant(TimeZone.UTC)
 
-        extraMocks(kronoJob, TestDataProvider.sampleSpyJob)
-        val minutesInTenDays = 10.toDuration(DurationUnit.DAYS).toLong(DurationUnit.MINUTES)
-        (1..minutesInTenDays).forEach {
-            val timeAtMinute = currentTime.plus(it.minutes)
-            val ldt = timeAtMinute.toLocalDateTime(TimeZone.UTC)
-            if (ldt.hour == 5 && ldt.minute == 5) {
-                Kronos.handleJobs(timeAtMinute)
-                runCurrent()
-            }
-        }
+        assert(aligned == expected) { "Expected $expected but got $aligned" }
+    }
 
-        // Exactly one Friday (Jan 5) in the 10-day range
-        coVerify(exactly = 1) { TestDataProvider.sampleSpyJob.execute(any(), any()) }
+    @Test
+    fun `everyMonth dayOfMonth 31 skips months without a 31st day instead of drifting`() {
+        // Just after Jan 31 07:00 - the next candidate month (Feb) has no 31st day, so this
+        // should skip straight to March 31, not drift via a fixed 30-day add (which old
+        // nextPeriodicTime() did, landing on Mar 2).
+        val from = LocalDateTime(
+            date = LocalDate(year = 2024, month = kotlinx.datetime.Month.JANUARY, dayOfMonth = 31),
+            time = LocalTime(8, 0)
+        ).toInstant(TimeZone.UTC)
+
+        val periodic = Periodic.everyMonth(dayOfMonth = 31, hour = 7, minute = 0)
+        val aligned = alignToPeriodic(from, periodic)
+        val expected = LocalDateTime(
+            date = LocalDate(year = 2024, month = kotlinx.datetime.Month.MARCH, dayOfMonth = 31),
+            time = LocalTime(7, 0)
+        ).toInstant(TimeZone.UTC)
+
+        assert(aligned == expected) { "Expected $expected but got $aligned" }
+    }
+
+    @Test
+    fun `everyYear Feb 29 only fires on leap years`() {
+        // 2023 is not a leap year; the next Feb 29 is 2024.
+        val from = LocalDateTime(
+            date = LocalDate(year = 2023, month = kotlinx.datetime.Month.MARCH, dayOfMonth = 1),
+            time = LocalTime(0, 0)
+        ).toInstant(TimeZone.UTC)
+
+        val periodic = Periodic.everyYear(month = 2, dayOfMonth = 29, hour = 0, minute = 0)
+        val aligned = alignToPeriodic(from, periodic)
+        val expected = LocalDateTime(
+            date = LocalDate(year = 2024, month = kotlinx.datetime.Month.FEBRUARY, dayOfMonth = 29),
+            time = LocalTime(0, 0)
+        ).toInstant(TimeZone.UTC)
+
+        assert(aligned == expected) { "Expected $expected but got $aligned" }
     }
 
     @Test
@@ -484,13 +540,103 @@ class SchedulerTest {
         extraMocks(kronoJob, TestDataProvider.sampleSpyJob)
         coEvery { Kronos.addJob(capture(rescheduledJobs)) } returns ""
 
-        Kronos.handleJobs(startTime.plus(1.minutes))
+        Kronos.handleJobs(startTime)
         runCurrent()
 
         // Job still executes on its last cycle
         coVerify(exactly = 1) { TestDataProvider.sampleSpyJob.execute(any(), any()) }
         // But no new job is inserted
         assert(rescheduledJobs.isEmpty()) { "Expected no reschedule on last cycle but addJob was called with: $rescheduledJobs" }
+    }
+
+    // ── Overshoot handling for periodic jobs ────────────────────────────────
+
+    @Test
+    fun `periodic job with OvershotAction Fire catches up a missed occurrence exactly once`() = runTest {
+        val periodic = Periodic.everyDay(7, 1)
+        val store = FakeKronosStore()
+        fakeMocks(store, TestDataProvider.sampleSpyJob)
+
+        val target = alignToPeriodic(Clock.System.now(), periodic)
+        store.seed(
+            KronoJob(
+                jobName = TestDataProvider.sampleSpyJob.name,
+                startTime = target.toEpochMilliseconds(),
+                params = emptyMap(),
+                periodic = periodic,
+                overshotAction = OvershotAction.Fire
+            )
+        )
+
+        // Process was down at the exact target minute; it only gets to check 2 hours later.
+        val missedCheck = target.plus(2.hours)
+        Kronos.handleJobs(missedCheck)
+        runCurrent()
+
+        coVerify(exactly = 1) { TestDataProvider.sampleSpyJob.execute(any(), any()) }
+
+        // The missed occurrence's document is replaced by tomorrow's target.
+        val rescheduled = store.jobsById.values.single()
+        assert(rescheduled.startTime > target.toEpochMilliseconds()) {
+            "Expected rescheduled startTime to move forward, was ${rescheduled.startTime}"
+        }
+
+        // A later poll (or a restart re-scanning due jobs) at the same instant must not re-fire it,
+        // since the fired occurrence's document no longer exists.
+        Kronos.handleJobs(missedCheck)
+        runCurrent()
+        coVerify(exactly = 1) { TestDataProvider.sampleSpyJob.execute(any(), any()) }
+    }
+
+    @Test
+    fun `periodic job with OvershotAction Drop removes a missed occurrence without executing`() = runTest {
+        val periodic = Periodic.everyDay(7, 1)
+        val store = FakeKronosStore()
+        fakeMocks(store, TestDataProvider.sampleSpyJob)
+
+        val target = alignToPeriodic(Clock.System.now(), periodic)
+        store.seed(
+            KronoJob(
+                jobName = TestDataProvider.sampleSpyJob.name,
+                startTime = target.toEpochMilliseconds(),
+                params = emptyMap(),
+                periodic = periodic,
+                overshotAction = OvershotAction.Drop
+            )
+        )
+
+        Kronos.handleJobs(target.plus(2.hours))
+        runCurrent()
+
+        coVerify(exactly = 0) { TestDataProvider.sampleSpyJob.execute(any(), any()) }
+        assert(store.jobsById.isEmpty()) { "Expected the missed occurrence to be dropped" }
+    }
+
+    @Test
+    fun `periodic job with OvershotAction Nothing leaves the missed occurrence pending`() = runTest {
+        val periodic = Periodic.everyDay(7, 1)
+        val store = FakeKronosStore()
+        fakeMocks(store, TestDataProvider.sampleSpyJob)
+
+        val target = alignToPeriodic(Clock.System.now(), periodic)
+        store.seed(
+            KronoJob(
+                jobName = TestDataProvider.sampleSpyJob.name,
+                startTime = target.toEpochMilliseconds(),
+                params = emptyMap(),
+                periodic = periodic,
+                overshotAction = OvershotAction.Nothing
+            )
+        )
+
+        Kronos.handleJobs(target.plus(2.hours))
+        runCurrent()
+
+        coVerify(exactly = 0) { TestDataProvider.sampleSpyJob.execute(any(), any()) }
+        val pending = store.jobsById.values.single()
+        assert(pending.startTime == target.toEpochMilliseconds()) {
+            "Expected the missed occurrence to remain pending with its original target"
+        }
     }
 
     private fun TestScope.extraMocks(kronoJob: KronoJob, sampleJob: Job) {
@@ -507,6 +653,16 @@ class SchedulerTest {
             coEvery { countByName(any()) } returns 0L
         }
         every { Kronos.store } returns mockStore
+        every { Kronos.coroutineScope } returns CoroutineScope(StandardTestDispatcher(testScheduler) as CoroutineContext)
+        every { Kronos.jobs.get(any()) } returns sampleJob
+        every { Kronos.jobs } returns mutableMapOf(sampleJob.name to sampleJob)
+    }
+
+    private fun TestScope.fakeMocks(store: KronosStore, sampleJob: Job) {
+        mockkObject(Kronos)
+        every { Kronos.init(any<KronosStore>(), any()) } returns Kronos
+        every { Kronos.coroutineScope.isActive } returns isActive
+        every { Kronos.store } returns store
         every { Kronos.coroutineScope } returns CoroutineScope(StandardTestDispatcher(testScheduler) as CoroutineContext)
         every { Kronos.jobs.get(any()) } returns sampleJob
         every { Kronos.jobs } returns mutableMapOf(sampleJob.name to sampleJob)

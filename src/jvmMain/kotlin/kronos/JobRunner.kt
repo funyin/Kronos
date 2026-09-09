@@ -59,7 +59,6 @@ private fun validate(
     job: KronoJob,
     currentInstant: Instant,
 ): ValidationResult {
-    val currentDateTime = currentInstant.toLocalDateTime(TimeZone.UTC)
 
     //I am using whole minutes instead of milliseconds because there seems to be a millisecond
     // glitch when running in test
@@ -71,50 +70,16 @@ private fun validate(
         if (diff < 0) return ValidationResult.overshot
     }
 
-
-    val valid = if (job.periodic == null) {
-        when {
-            //the start time is in the past
-            startMinutesDiff > 0 -> {
-                return ValidationResult.overshot
-            }
-
-            startMinutesDiff == 0L -> true
-            else -> false
-        }
-    } else {
-        val matchMinute = currentDateTime.time.minute == job.periodic.minute
-        val matchHour = currentDateTime.time.hour == job.periodic.hour
-        val matchDayOfWeek = currentDateTime.dayOfWeek == job.periodic.dayOfWeek
-        val matchDayOfMonth = currentDateTime.dayOfMonth == job.periodic.dayOfMonth
-        val matchMonth = currentDateTime.month == job.periodic.month
-
-
-        when (job.periodic.every) {
-            Periodic.Every.minute -> true
-
-            Periodic.Every.hour -> matchMinute
-
-            Periodic.Every.day -> {
-                matchHour && matchMinute
-            }
-
-            Periodic.Every.week -> {
-                matchDayOfWeek && matchHour && matchMinute
-            }
-
-            Periodic.Every.month -> {
-                matchDayOfMonth && matchHour && matchMinute
-            }
-
-            Periodic.Every.year -> {
-                matchMonth && matchDayOfMonth && matchHour && matchMinute
-            }
-        }
+    //job.startTime is always kept aligned to the exact target occurrence (see
+    //nextPeriodicTime/alignToPeriodic), so periodic and one-off jobs are validated the same way:
+    //this also means a missed periodic occurrence is now correctly reported as overshot instead
+    //of silently waiting for the next matching occurrence.
+    val valid = when {
+        //the start time is in the past
+        startMinutesDiff > 0 -> return ValidationResult.overshot
+        startMinutesDiff == 0L -> true
+        else -> false
     }
-
-
-
 
     return if (valid) ValidationResult.valid
     else ValidationResult.scheduled
