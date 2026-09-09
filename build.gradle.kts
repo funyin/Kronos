@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "com.funyinkash"
-version = "0.0.8"
+version = "0.0.9"
 
 allprojects {
     group = rootProject.group
